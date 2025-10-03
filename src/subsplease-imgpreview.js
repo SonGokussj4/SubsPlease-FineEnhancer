@@ -20,10 +20,11 @@
  * ---------------------------------------------------------------- */
 const DEBOUNCE_TIMER = 300; // ms
 const CACHE_KEY = 'ratingCache';
+const FAVORITES_KEY = 'spFavorites';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 // Menu commands for quick settings
-GM_registerMenuCommand('Set image preview size', showSettingsDialog);
+GM_registerMenuCommand('Settings', showSettingsDialog);
 
 /* ------------------------------------------------------------------
  * UTILITY FUNCTIONS
@@ -72,6 +73,107 @@ function normalizeSize(raw) {
 }
 
 /* ------------------------------------------------------------------
+ * FAVORITES MANAGEMENT
+ * ---------------------------------------------------------------- */
+
+/** Get all favorites from localStorage */
+function getFavorites() {
+  try {
+    return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '{}');
+  } catch (e) {
+    console.error('Failed to parse favorites:', e);
+    return {};
+  }
+}
+
+/** Save favorites to localStorage */
+function saveFavorites(favorites) {
+  try {
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+  } catch (e) {
+    console.error('Failed to save favorites:', e);
+  }
+}
+
+/** Check if a show is favorited */
+function isFavorite(title) {
+  const normalizedTitle = normalizeTitle(title);
+  const favorites = getFavorites();
+  return !!favorites[normalizedTitle];
+}
+
+/** Toggle favorite status of a show */
+function toggleFavorite(title) {
+  const normalizedTitle = normalizeTitle(title);
+  const favorites = getFavorites();
+
+  if (favorites[normalizedTitle]) {
+    delete favorites[normalizedTitle];
+  } else {
+    favorites[normalizedTitle] = {
+      originalTitle: title,
+      timestamp: Date.now(),
+    };
+  }
+
+  saveFavorites(favorites);
+  return !!favorites[normalizedTitle];
+}
+
+/** Clear all favorites */
+function clearAllFavorites() {
+  if (confirm('Are you sure you want to clear all favorites? This cannot be undone.')) {
+    localStorage.removeItem(FAVORITES_KEY);
+    location.reload(); // Refresh to update UI
+  }
+}
+
+/** Update visual styling for favorite shows */
+function updateFavoriteVisuals(wrapper, isFav) {
+  if (!wrapper) return;
+
+  if (isFav) {
+    wrapper.classList.add('sp-favorite');
+  } else {
+    wrapper.classList.remove('sp-favorite');
+  }
+}
+
+/** Add favorite star to the time column */
+function addFavoriteStar(cell, titleText) {
+  // Find the table row and the time cell
+  const row = cell.closest('tr');
+  if (!row) return;
+
+  const timeCell = row.querySelector('.release-item-time');
+  if (!timeCell) return;
+
+  // Create favorite star
+  const favoriteSpan = document.createElement('span');
+  favoriteSpan.className = 'sp-favorite-star';
+  favoriteSpan.style.cursor = 'pointer';
+  favoriteSpan.style.userSelect = 'none';
+  favoriteSpan.innerHTML = isFavorite(titleText) ? '★' : '☆';
+  favoriteSpan.style.color = isFavorite(titleText) ? '#ffd700' : '#666';
+  favoriteSpan.title = 'Click to toggle favorite';
+
+  favoriteSpan.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isNowFavorite = toggleFavorite(titleText);
+    favoriteSpan.innerHTML = isNowFavorite ? '★' : '☆';
+    favoriteSpan.style.color = isNowFavorite ? '#ffd700' : '#666';
+
+    // Update visual styling of parent elements - find the wrapper in the first cell
+    const wrapper = row.querySelector('.sp-img-wrapper');
+    updateFavoriteVisuals(wrapper, isNowFavorite);
+  });
+
+  // Position the star at the top-right of the time cell
+  timeCell.style.position = 'relative';
+  timeCell.appendChild(favoriteSpan);
+}
+
+/* ------------------------------------------------------------------
  * ANILIST FETCH + CACHE
  * ---------------------------------------------------------------- */
 
@@ -110,12 +212,12 @@ async function fetchAniListRating(title, forceRefresh = false) {
   }
 
   const query = `
-        query ($search: String) {
-          Media(search: $search, type: ANIME) {
-            averageScore
+          query ($search: String) {
+            Media(search: $search, type: ANIME) {
+              averageScore
+            }
           }
-        }
-    `;
+      `;
 
   try {
     const json = await gmFetchAniList(query, { search: cleanTitle });
@@ -147,6 +249,7 @@ async function fetchAniListRating(title, forceRefresh = false) {
 
 /** Attach rating badge to a title */
 async function addRatingToTitle(titleDiv, titleText) {
+  // Create rating span
   const ratingSpan = document.createElement('span');
   ratingSpan.style.marginLeft = '8px';
   ratingSpan.style.cursor = 'pointer';
@@ -176,7 +279,10 @@ async function addRatingToTitle(titleDiv, titleText) {
     }
   }
 
-  ratingSpan.addEventListener('click', () => updateRating(true));
+  ratingSpan.addEventListener('click', (e) => {
+    e.stopPropagation();
+    updateRating(true);
+  });
   updateRating(false);
 }
 
@@ -188,12 +294,88 @@ async function addRatingToTitle(titleDiv, titleText) {
 function ensureStyles() {
   if (document.getElementById('sp-styles')) return;
   const css = `
-#releases-table td .sp-img-wrapper { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; }
-.sp-thumb { width: var(--sp-thumb-size, 64px); height: auto; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
-.sp-text { display: flex; flex-direction: column; justify-content: flex-start; }
-.sp-title { font-weight: 600; margin-bottom: 4px; }
-.sp-badges { margin-top: 6px; }
-`;
+  #releases-table td .sp-img-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 6px 0;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    position: relative;
+  }
+  .sp-thumb {
+    width: var(--sp-thumb-size, 64px);
+    height: auto;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+  }
+  .sp-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+  .sp-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .sp-badges {
+    margin-top: 6px;
+  }
+  .sp-favorite {
+    background: linear-gradient(90deg,
+      rgba(255, 215, 0, 0.08) 0%,
+      rgba(255, 215, 0, 0.04) 30%,
+      rgba(255, 215, 0, 0.02) 60%,
+      transparent 100%);
+    border-left: 3px solid rgba(255, 215, 0, 0.6);
+    padding-left: 8px;
+    margin-left: -3px;
+  }
+  .sp-favorite::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom,
+      rgba(255, 215, 0, 0.8) 0%,
+      rgba(255, 215, 0, 0.4) 50%,
+      rgba(255, 215, 0, 0.8) 100%);
+    border-radius: 1px;
+  }
+  .sp-favorite .sp-thumb {
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.25);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+  }
+  .sp-favorite:hover {
+    background: linear-gradient(90deg,
+      rgba(255, 215, 0, 0.12) 0%,
+      rgba(255, 215, 0, 0.06) 30%,
+      rgba(255, 215, 0, 0.03) 60%,
+      transparent 100%);
+  }
+  .sp-favorite-star {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 16px;
+    z-index: 10;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    transition: all 0.2s ease;
+    opacity: 0.7;
+    line-height: 1;
+  }
+  .sp-favorite-star:hover {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  .release-item-time {
+    position: relative;
+  }
+  `;
   const style = document.createElement('style');
   style.id = 'sp-styles';
   style.textContent = css;
@@ -234,6 +416,16 @@ function addImages() {
     titleDiv.appendChild(link);
 
     const titleText = link.textContent.trim();
+
+    // Set initial favorite styling before adding rating
+    const isCurrentlyFavorite = isFavorite(titleText);
+    if (isCurrentlyFavorite) {
+      wrapper.classList.add('sp-favorite');
+    }
+
+    // Add favorite star to time column
+    addFavoriteStar(cell, titleText);
+
     addRatingToTitle(titleDiv, titleText);
 
     const badge = cell.querySelector('.badge-wrapper');
@@ -280,13 +472,21 @@ function showSettingsDialog() {
     border: '1px solid #ccc',
     borderRadius: '5px',
     padding: '20px',
-    width: '300px',
+    width: '350px',
     boxShadow: '0 4px 6px rgba(50,50,93,0.11), 0 1px 3px rgba(0,0,0,0.08)',
   });
+
+  // Image size section
+  const imageSizeLabel = document.createElement('label');
+  imageSizeLabel.textContent = 'Image Preview Size:';
+  imageSizeLabel.style.display = 'block';
+  imageSizeLabel.style.marginBottom = '8px';
+  imageSizeLabel.style.fontWeight = 'bold';
 
   const select = document.createElement('select');
   select.id = 'imageSizeSelect';
   select.style.width = '100%';
+  select.style.marginBottom = '20px';
   [
     { text: 'Small (64px)', value: '64px' },
     { text: 'Medium (128px)', value: '128px' },
@@ -299,6 +499,40 @@ function showSettingsDialog() {
   });
   select.value = GM_getValue('imageSize', '64px');
 
+  // Favorites section
+  const favoritesLabel = document.createElement('label');
+  favoritesLabel.textContent = 'Favorites Management:';
+  favoritesLabel.style.display = 'block';
+  favoritesLabel.style.marginBottom = '8px';
+  favoritesLabel.style.fontWeight = 'bold';
+
+  const favoritesCount = Object.keys(getFavorites()).length;
+  const favoritesInfo = document.createElement('div');
+  favoritesInfo.textContent = `Current favorites: ${favoritesCount}`;
+  favoritesInfo.style.marginBottom = '10px';
+  favoritesInfo.style.color = '#666';
+  favoritesInfo.style.fontSize = '14px';
+
+  const clearFavoritesButton = document.createElement('button');
+  clearFavoritesButton.textContent = 'Clear All Favorites';
+  Object.assign(clearFavoritesButton.style, {
+    backgroundColor: '#dc3545',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    padding: '8px 16px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    width: '100%',
+    marginBottom: '20px',
+  });
+
+  clearFavoritesButton.onclick = () => {
+    document.body.removeChild(modal);
+    clearAllFavorites();
+  };
+
+  // Main buttons
   const saveButton = document.createElement('button');
   saveButton.textContent = 'Save';
   Object.assign(saveButton.style, {
@@ -340,7 +574,11 @@ function showSettingsDialog() {
   buttonsDiv.appendChild(saveButton);
   buttonsDiv.appendChild(closeButton);
 
+  dialog.appendChild(imageSizeLabel);
   dialog.appendChild(select);
+  dialog.appendChild(favoritesLabel);
+  dialog.appendChild(favoritesInfo);
+  dialog.appendChild(clearFavoritesButton);
   dialog.appendChild(buttonsDiv);
   modal.appendChild(dialog);
   document.body.appendChild(modal);
