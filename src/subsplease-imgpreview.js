@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SubsPlease ImgPreview
 // @namespace    https://github.com/SonGokussj4/greasyfork-scripts
-// @version      1.0.0
+// @version      1.1.0
 // @description  Adds small image preview of "Airtime" and "New and Hot" episodes
 // @author       SonGokussj4
 // @license      MIT
@@ -15,34 +15,71 @@
 // @run-at       document-start
 // ==/UserScript==
 
+/* ------------------------------------------------------------------
+ * CONFIG & CONSTANTS
+ * ---------------------------------------------------------------- */
 const DEBOUNCE_TIMER = 300;
+const CACHE_KEY = 'ratingCache';
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
+// Menu commands for quick settings
 GM_registerMenuCommand('Set padding', () => {
   const padding = prompt('Enter padding value (e.g., 10px):');
-  if (padding) {
-    GM_setValue('padding', padding);
-  }
+  if (padding) GM_setValue('padding', padding);
 });
-
 GM_registerMenuCommand('Set image preview size', showImageSizeDialog);
 
+/* ------------------------------------------------------------------
+ * UTILITY FUNCTIONS
+ * ---------------------------------------------------------------- */
+
+/** Simple debounce wrapper */
 function debounce(func, wait) {
   let timeout;
-  return function () {
-    const context = this,
-      args = arguments;
+  return function (...args) {
     clearTimeout(timeout);
-    timeout = setTimeout(function () {
-      func.apply(context, args);
-    }, wait);
+    timeout = setTimeout(() => func.apply(this, args), wait);
   };
 }
 
+/** Normalize anime title:
+ * - Remove episode markers like "— 01" / "- 03"
+ * - Remove "(Batch)" or other bracketed notes at the end
+ * - Remove episode ranges like "— 01-24"
+ */
 function normalizeTitle(raw) {
-  // remove episode markers like "— 01" or " - 03"
-  return raw.replace(/[-–—]\s*\d+$/, '').trim();
+  const normalized = raw
+    .replace(/\s*\(Batch\)$/i, '') // remove "(Batch)" suffix
+    .replace(/\s*[–—-]\s*\d+(\s*-\s*\d+)?$/, '') // remove trailing ep/range markers
+    .trim();
+  console.debug(`normalizeTitle: ${raw} --> ${normalized}`);
+  return normalized;
 }
 
+/** Convert milliseconds → "Xh Ym" */
+function msToTime(ms) {
+  let totalSeconds = Math.floor(ms / 1000);
+  let hours = Math.floor(totalSeconds / 3600);
+  let minutes = Math.floor((totalSeconds % 3600) / 60);
+  return `${hours}h ${minutes}m`;
+}
+
+/** Normalize CSS size input into "NNpx" */
+function normalizeSize(raw) {
+  if (typeof raw === 'number') return raw + 'px';
+  if (typeof raw === 'string') {
+    raw = raw.trim();
+    if (/^\d+$/.test(raw)) return raw + 'px';
+    if (/^\d+px$/.test(raw)) return raw;
+  }
+  return '64px';
+}
+
+/* ------------------------------------------------------------------
+ * ANILIST FETCH + CACHE
+ * ---------------------------------------------------------------- */
+
+/** Perform AniList GraphQL request */
 function gmFetchAniList(query, variables) {
   return new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
@@ -56,8 +93,7 @@ function gmFetchAniList(query, variables) {
       onload: (response) => {
         try {
           console.log('Fetching ratings for:', JSON.stringify(variables.search));
-          const json = JSON.parse(response.responseText);
-          resolve(json);
+          resolve(JSON.parse(response.responseText));
         } catch (e) {
           reject(e);
         }
@@ -67,16 +103,14 @@ function gmFetchAniList(query, variables) {
   });
 }
 
+/** Fetch AniList rating, with caching (6h TTL) */
 async function fetchAniListRating(title, forceRefresh = false) {
-  const cacheKey = 'ratingCache';
-  const cache = JSON.parse(localStorage.getItem(cacheKey) || '{}');
   const now = Date.now();
-  const SIX_HOURS = 6 * 60 * 60 * 1000;
-
+  const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
   const cleanTitle = normalizeTitle(title);
 
-  if (!forceRefresh && cache[cleanTitle] && now - cache[cleanTitle].timestamp < SIX_HOURS) {
-    return { score: cache[cleanTitle].score, cached: true, expires: cache[cleanTitle].timestamp + SIX_HOURS };
+  if (!forceRefresh && cache[cleanTitle] && now - cache[cleanTitle].timestamp < CACHE_TTL_MS) {
+    return { score: cache[cleanTitle].score, cached: true, expires: cache[cleanTitle].timestamp + CACHE_TTL_MS };
   }
 
   const query = `
@@ -92,39 +126,35 @@ async function fetchAniListRating(title, forceRefresh = false) {
     const score = json?.data?.Media?.averageScore || null;
 
     if (score) {
-      const currentCache = JSON.parse(localStorage.getItem(cacheKey) || '{}');
-      currentCache[cleanTitle] = { score, timestamp: now };
-      localStorage.setItem(cacheKey, JSON.stringify(currentCache));
+      cache[cleanTitle] = { score, timestamp: now };
+      localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
     }
 
-    return { score, cached: false, expires: now + SIX_HOURS };
+    return { score, cached: false, expires: now + CACHE_TTL_MS };
   } catch (err) {
     console.error('AniList fetch failed:', err);
-    // fallback to cached if exists
     if (cache[cleanTitle]) {
       return {
         score: cache[cleanTitle].score,
         cached: true,
-        expires: cache[cleanTitle].timestamp + SIX_HOURS,
+        expires: cache[cleanTitle].timestamp + CACHE_TTL_MS,
         failed: true,
       };
     }
-    return { score: null, cached: false, expires: now + SIX_HOURS, failed: true };
+    return { score: null, cached: false, expires: now + CACHE_TTL_MS, failed: true };
   }
 }
 
-function msToTime(ms) {
-  let totalSeconds = Math.floor(ms / 1000);
-  let hours = Math.floor(totalSeconds / 3600);
-  let minutes = Math.floor((totalSeconds % 3600) / 60);
-  return `${hours}h ${minutes}m`;
-}
+/* ------------------------------------------------------------------
+ * RATING BADGE HANDLING
+ * ---------------------------------------------------------------- */
 
+/** Attach rating badge to a title */
 async function addRatingToTitle(titleDiv, titleText) {
   const ratingSpan = document.createElement('span');
   ratingSpan.style.marginLeft = '8px';
   ratingSpan.style.cursor = 'pointer';
-  ratingSpan.textContent = '…'; // placeholder
+  ratingSpan.textContent = '…';
   titleDiv.appendChild(ratingSpan);
 
   async function updateRating(force = false) {
@@ -134,13 +164,13 @@ async function addRatingToTitle(titleDiv, titleText) {
       ratingSpan.textContent = `⭐ ${score}%`;
 
       if (cached) {
-        ratingSpan.style.color = '#ff9900'; // orange
+        ratingSpan.style.color = '#ff9900'; // cached → orange
         const remaining = expires - Date.now();
         ratingSpan.title = failed
           ? `Refresh failed — showing cached (expires in ${msToTime(remaining)})\nClick to retry`
           : `Loaded from cache (expires in ${msToTime(remaining)})\nClick to refresh`;
       } else {
-        ratingSpan.style.color = '#00cc66'; // green = fresh
+        ratingSpan.style.color = '#00cc66'; // fresh → green
         ratingSpan.title = 'Fresh from AniList\nClick to refresh';
       }
     } else {
@@ -154,86 +184,11 @@ async function addRatingToTitle(titleDiv, titleText) {
   updateRating(false);
 }
 
-function showImageSizeDialog() {
-  // Create a modal container
-  const modal = document.createElement('div');
-  modal.id = 'imageSizeModal';
-  Object.assign(modal.style, {
-    position: 'fixed',
-    left: '0',
-    top: '0',
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: '9999',
-  });
+/* ------------------------------------------------------------------
+ * IMAGE PREVIEW + STYLES
+ * ---------------------------------------------------------------- */
 
-  // Dialog box
-  const dialog = document.createElement('div');
-  Object.assign(dialog.style, {
-    backgroundColor: 'white',
-    border: '1px solid #ccc',
-    borderRadius: '5px',
-    padding: '20px',
-    width: '300px',
-    boxShadow: '0 4px 6px rgba(50,50,93,0.11), 0 1px 3px rgba(0,0,0,0.08)',
-  });
-
-  // Select
-  const select = document.createElement('select');
-  select.id = 'imageSizeSelect';
-  select.style.width = '100%';
-
-  const sizes = [
-    { text: 'Small (64px)', value: '64px' },
-    { text: 'Medium (128px)', value: '128px' },
-    { text: 'Large (256px)', value: '256px' },
-  ];
-
-  sizes.forEach((item) => {
-    const option = document.createElement('option');
-    option.value = item.value;
-    option.text = item.text;
-    select.appendChild(option);
-  });
-
-  // Pre-select current size
-  const currentSize = GM_getValue('imageSize', '64px');
-  select.value = currentSize;
-
-  // Save button
-  const saveButton = document.createElement('button');
-  saveButton.textContent = 'Save';
-  Object.assign(saveButton.style, {
-    marginTop: '10px',
-    backgroundColor: '#007BFF',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    padding: '10px 20px',
-    cursor: 'pointer',
-    fontSize: '16px',
-  });
-
-  saveButton.onclick = () => {
-    const selectedSize = select.value;
-    GM_setValue('imageSize', selectedSize);
-    document.body.removeChild(modal);
-
-    // okamžitě aplikovat změnu bez reloadu
-    document.documentElement.style.setProperty('--sp-thumb-size', selectedSize);
-  };
-
-  dialog.appendChild(select);
-  dialog.appendChild(saveButton);
-  modal.appendChild(dialog);
-  document.body.appendChild(modal);
-}
-
-// --- přidej jednou (např. před observerem) ---
+/** Inject styles (only once) */
 function ensureStyles() {
   if (document.getElementById('sp-styles')) return;
   const css = `
@@ -249,27 +204,16 @@ function ensureStyles() {
   document.head.appendChild(style);
 }
 
-function normalizeSize(raw) {
-  if (typeof raw === 'number') return raw + 'px';
-  if (typeof raw === 'string') {
-    raw = raw.trim();
-    if (/^\d+$/.test(raw)) return raw + 'px'; // "64" -> "64px"
-    if (/^\d+px$/.test(raw)) return raw; // "64px" -> "64px"
-  }
-  return '64px';
-}
-
+/** Attach images + ratings to release table */
 function addImages() {
   ensureStyles();
 
-  // načteme a normalizujeme velikost miniatury (CSS proměnná)
-  const rawSize = GM_getValue('imageSize', '64px');
-  const thumbSize = normalizeSize(rawSize);
+  // Load thumbnail size
+  const thumbSize = normalizeSize(GM_getValue('imageSize', '64px'));
   document.documentElement.style.setProperty('--sp-thumb-size', thumbSize);
 
   const links = document.querySelectorAll('#releases-table a[data-preview-image]:not(.processed)');
   links.forEach((link) => {
-    // safety checks
     if (!link || link.classList.contains('processed')) return;
     link.classList.add('processed');
 
@@ -277,15 +221,7 @@ function addImages() {
     const cell = link.closest('td');
     if (!cell) return;
 
-    // Build structure:
-    // <div class="sp-img-wrapper">
-    //   <img class="sp-thumb" ...>
-    //   <div class="sp-text">
-    //     <div class="sp-title"> <a ...>Title</a> </div>
-    //     <div class="sp-badges"> ...badge-wrapper... </div>
-    //   </div>
-    // </div>
-
+    // Build wrapper layout
     const wrapper = document.createElement('div');
     wrapper.className = 'sp-img-wrapper';
 
@@ -299,16 +235,13 @@ function addImages() {
 
     const titleDiv = document.createElement('div');
     titleDiv.className = 'sp-title';
-    // move the link into the titleDiv (ke zpracování použijeme appendChild)
     titleDiv.appendChild(link);
 
     const titleText = link.textContent.trim();
     addRatingToTitle(titleDiv, titleText);
 
-    // move badge-wrapper (pokud existuje) pod title
     const badge = cell.querySelector('.badge-wrapper');
     if (badge) {
-      // detach badge from old place (appendChild přesune element)
       badge.classList.add('sp-badges');
       textDiv.appendChild(titleDiv);
       textDiv.appendChild(badge);
@@ -319,39 +252,102 @@ function addImages() {
     wrapper.appendChild(img);
     wrapper.appendChild(textDiv);
 
-    // zapíšeme nový obsah do buňky
-    cell.innerHTML = ''; // vyčistíme, protože přesouváme původní link + badges
+    cell.innerHTML = '';
     cell.appendChild(wrapper);
   });
 }
 
+/* ------------------------------------------------------------------
+ * SETTINGS DIALOGS
+ * ---------------------------------------------------------------- */
+
+/** Modal to change image size */
+function showImageSizeDialog() {
+  const modal = document.createElement('div');
+  modal.id = 'imageSizeModal';
+  Object.assign(modal.style, {
+    position: 'fixed',
+    left: '0',
+    top: '0',
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: '9999',
+  });
+
+  const dialog = document.createElement('div');
+  Object.assign(dialog.style, {
+    backgroundColor: 'white',
+    border: '1px solid #ccc',
+    borderRadius: '5px',
+    padding: '20px',
+    width: '300px',
+    boxShadow: '0 4px 6px rgba(50,50,93,0.11), 0 1px 3px rgba(0,0,0,0.08)',
+  });
+
+  const select = document.createElement('select');
+  select.id = 'imageSizeSelect';
+  select.style.width = '100%';
+  [
+    { text: 'Small (64px)', value: '64px' },
+    { text: 'Medium (128px)', value: '128px' },
+    { text: 'Large (256px)', value: '256px' },
+  ].forEach((item) => {
+    const option = document.createElement('option');
+    option.value = item.value;
+    option.text = item.text;
+    select.appendChild(option);
+  });
+  select.value = GM_getValue('imageSize', '64px');
+
+  const saveButton = document.createElement('button');
+  saveButton.textContent = 'Save';
+  Object.assign(saveButton.style, {
+    marginTop: '10px',
+    backgroundColor: '#007BFF',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    padding: '10px 20px',
+    cursor: 'pointer',
+    fontSize: '16px',
+  });
+
+  saveButton.onclick = () => {
+    GM_setValue('imageSize', select.value);
+    document.body.removeChild(modal);
+    document.documentElement.style.setProperty('--sp-thumb-size', select.value);
+  };
+
+  dialog.appendChild(select);
+  dialog.appendChild(saveButton);
+  modal.appendChild(dialog);
+  document.body.appendChild(modal);
+}
+
+/* ------------------------------------------------------------------
+ * ENTRYPOINT: Mutation observer
+ * ---------------------------------------------------------------- */
 (function () {
   'use strict';
 
-  // Watch for changes on release list
-  var mutationConfig = {
-    attributes: false,
-    childList: true,
-    subtree: true,
-  };
-
-  // Watch for changes in table
   const debouncedAddImages = debounce(addImages, DEBOUNCE_TIMER);
 
-  function mutationCallback(mutationsList) {
-    for (var mutation of mutationsList) {
-      if (mutation.type == 'childList') {
-        // Check if any addedNodes have a 'data-preview-image' attribute and not 'processed' class
+  const observer = new MutationObserver((mutationsList) => {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'childList') {
         for (const node of mutation.addedNodes) {
           if (node.nodeType === Node.ELEMENT_NODE && node.querySelector('a[data-preview-image]:not(.processed)')) {
             debouncedAddImages();
-            break;
+            return;
           }
         }
       }
     }
-  }
+  });
 
-  var observer = new MutationObserver(mutationCallback);
-  observer.observe(document.documentElement, mutationConfig);
+  observer.observe(document.documentElement, { childList: true, subtree: true });
 })();
