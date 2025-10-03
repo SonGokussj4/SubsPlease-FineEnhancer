@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         SubsPlease ImgPreview
 // @namespace    https://github.com/SonGokussj4/tampermonkey-subsplease-ImgPreview
-// @version      1.1.0
-// @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands.
+// @version      1.2.0
+// @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands. Also manage favorites with visual highlights.
 // @author       SonGokussj4
 // @license      MIT
 // @match        https://subsplease.org/
