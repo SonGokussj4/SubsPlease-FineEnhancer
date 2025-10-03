@@ -44,8 +44,8 @@ function debounce(func, wait) {
 
 /** Normalize anime title:
  * - Remove episode markers like "— 01" / "- 03"
- * - Remove "(Batch)" or other bracketed notes at the end
  * - Remove episode ranges like "— 01-24"
+ * - Remove "(Batch)" or other bracketed notes at the end
  */
 function normalizeTitle(raw) {
   const normalized = raw
@@ -294,7 +294,7 @@ function showImageSizeDialog() {
   [
     { text: 'Small (64px)', value: '64px' },
     { text: 'Medium (128px)', value: '128px' },
-    { text: 'Large (256px)', value: '256px' },
+    { text: 'Large (225px)', value: '225px' },
   ].forEach((item) => {
     const option = document.createElement('option');
     option.value = item.value;
