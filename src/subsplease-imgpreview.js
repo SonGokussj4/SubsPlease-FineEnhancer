@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         SubsPlease ImgPreview
-// @namespace    https://github.com/SonGokussj4/greasyfork-scripts
+// @namespace    https://github.com/SonGokussj4/tampermonkey-subsplease-ImgPreview
 // @version      1.1.0
-// @description  Adds small image preview of "Airtime" and "New and Hot" episodes
+// @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands.
 // @author       SonGokussj4
 // @license      MIT
 // @match        https://subsplease.org/
@@ -18,16 +18,12 @@
 /* ------------------------------------------------------------------
  * CONFIG & CONSTANTS
  * ---------------------------------------------------------------- */
-const DEBOUNCE_TIMER = 300;
+const DEBOUNCE_TIMER = 300; // ms
 const CACHE_KEY = 'ratingCache';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 // Menu commands for quick settings
-GM_registerMenuCommand('Set padding', () => {
-  const padding = prompt('Enter padding value (e.g., 10px):');
-  if (padding) GM_setValue('padding', padding);
-});
-GM_registerMenuCommand('Set image preview size', showImageSizeDialog);
+GM_registerMenuCommand('Set image preview size', showSettingsDialog);
 
 /* ------------------------------------------------------------------
  * UTILITY FUNCTIONS
@@ -261,10 +257,10 @@ function addImages() {
  * SETTINGS DIALOGS
  * ---------------------------------------------------------------- */
 
-/** Modal to change image size */
-function showImageSizeDialog() {
+/** Modal to change script settings */
+function showSettingsDialog() {
   const modal = document.createElement('div');
-  modal.id = 'imageSizeModal';
+  modal.id = 'settingsModal';
   Object.assign(modal.style, {
     position: 'fixed',
     left: '0',
@@ -306,7 +302,6 @@ function showImageSizeDialog() {
   const saveButton = document.createElement('button');
   saveButton.textContent = 'Save';
   Object.assign(saveButton.style, {
-    marginTop: '10px',
     backgroundColor: '#007BFF',
     color: 'white',
     border: 'none',
@@ -322,10 +317,39 @@ function showImageSizeDialog() {
     document.documentElement.style.setProperty('--sp-thumb-size', select.value);
   };
 
+  const closeButton = document.createElement('button');
+  closeButton.textContent = 'Close';
+  Object.assign(closeButton.style, {
+    backgroundColor: '#6c757d',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    padding: '10px 20px',
+    cursor: 'pointer',
+    fontSize: '16px',
+  });
+
+  closeButton.onclick = () => {
+    document.body.removeChild(modal);
+  };
+
+  const buttonsDiv = document.createElement('div');
+  buttonsDiv.style.display = 'flex';
+  buttonsDiv.style.gap = '10px';
+  buttonsDiv.style.marginTop = '10px';
+  buttonsDiv.appendChild(saveButton);
+  buttonsDiv.appendChild(closeButton);
+
   dialog.appendChild(select);
-  dialog.appendChild(saveButton);
+  dialog.appendChild(buttonsDiv);
   modal.appendChild(dialog);
   document.body.appendChild(modal);
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
+  });
 }
 
 /* ------------------------------------------------------------------
