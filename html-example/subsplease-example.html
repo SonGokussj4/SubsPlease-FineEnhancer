@@ -1,5 +1,5 @@
-<html lang="en-US" data-theme="dark" data-lt-installed="true"
-    style="--sp-thumb-size: 128px; --vsc-domain: &quot;subsplease.org&quot;;" class=" xrccnb idc0_343">
+<html lang="en-US" data-theme="dark" data-lt-installed="true" class=" wvznzlxbr idc0_343"
+    style="--vsc-domain: &quot;subsplease.org&quot;; --sp-thumb-size: 64px;">
 
 <head>
 
@@ -451,9 +451,6 @@
     <script type="text/javascript" src="/includes/moment-with-locales.min.js?ver=5.5.2" id="moment-locales-js"></script>
     <script type="text/javascript" src="/includes/moment-timezone-with-data.min.js?ver=5.5.2"
         id="moment-timezone-data-js"></script>
-    <script type="text/javascript" src="/includes/worldclock-plugin.min.js?ver=5.5.2"
-        id="worldclock-plugin-js"></script>
-    <script type="text/javascript" src="/includes/preview-image.js"></script>
     <script src="https://subsplease.org/wp-includes/js/wp-emoji-release.min.js?ver=6.8.3" defer=""></script>
     <style id="fit-vids-style">
         .fluid-width-video-wrapper {
@@ -501,6 +498,9 @@
             gap: 10px;
             align-items: flex-start;
             padding: 6px 0;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            position: relative;
         }
 
         .sp-thumb {
@@ -509,6 +509,7 @@
             object-fit: cover;
             border-radius: 6px;
             flex-shrink: 0;
+            transition: all 0.3s ease;
         }
 
         .sp-text {
@@ -525,11 +526,77 @@
         .sp-badges {
             margin-top: 6px;
         }
+
+        .sp-favorite {
+            background: linear-gradient(90deg,
+                    rgba(255, 215, 0, 0.08) 0%,
+                    rgba(255, 215, 0, 0.04) 30%,
+                    rgba(255, 215, 0, 0.02) 60%,
+                    transparent 100%);
+            border-left: 3px solid rgba(255, 215, 0, 0.6);
+            padding-left: 8px;
+            margin-left: -3px;
+        }
+
+        .sp-favorite::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom,
+                    rgba(255, 215, 0, 0.8) 0%,
+                    rgba(255, 215, 0, 0.4) 50%,
+                    rgba(255, 215, 0, 0.8) 100%);
+            border-radius: 1px;
+        }
+
+        .sp-favorite .sp-thumb {
+            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.25);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .sp-favorite:hover {
+            background: linear-gradient(90deg,
+                    rgba(255, 215, 0, 0.12) 0%,
+                    rgba(255, 215, 0, 0.06) 30%,
+                    rgba(255, 215, 0, 0.03) 60%,
+                    transparent 100%);
+        }
+
+        .sp-favorite-star {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 16px;
+            z-index: 10;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            transition: all 0.2s ease;
+            opacity: 0.7;
+            line-height: 1;
+        }
+
+        .sp-favorite-star:hover {
+            opacity: 1;
+            transform: scale(1.15);
+        }
+
+        .release-item-time {
+            position: relative;
+        }
     </style>
 </head>
 
 <body
     class="home wp-singular page-template page-template-home page-template-home-php page page-id-14 wp-theme-allium singular has-site-branding has-wide-layout has-left-sidebar">
+    <div style="display:none"><iframe src="https://subsplease.org/analytics/" width="300" height="250"></iframe></div>
+    <script type="text/javascript" src="/includes/worldclock-plugin.min.js?ver=5.5.2"
+        id="worldclock-plugin-js"></script>
+    <script type="text/javascript" src="/includes/preview-image.js"></script>
+
+
+
     <div id="page" class="site-wrapper site">
 
 
@@ -630,15 +697,197 @@
                                                     <tr class="new">
                                                         <td class="release-item">
                                                             <div class="sp-img-wrapper"><img class="sp-thumb"
+                                                                    src="https://subsplease.org/wp-content/uploads/2025/10/151754.jpg"
+                                                                    alt="Saigo ni Hitotsu dake Onegai Shitemo Yoroshii Deshou ka — 02">
+                                                                <div class="sp-text">
+                                                                    <div class="sp-title"><a
+                                                                            href="/shows/saigo-ni-hitotsu-dake-onegai-shitemo-yoroshii-deshou-ka"
+                                                                            data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/151754.jpg"
+                                                                            class="processed">Saigo ni Hitotsu dake
+                                                                            Onegai Shitemo Yoroshii Deshou ka —
+                                                                            02</a><span title="Fresh from AniList
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(0, 204, 102);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            74%</span></div>
+                                                                    <div class="badge-wrapper sp-badges"><a
+                                                                            href="magnet:?xt=urn:btih:MMGHHI67GBWXYE7NP54MFV4XSZFHTU44&amp;dn=%5BSubsPlease%5D%20Saigo%20ni%20Hitotsu%20dake%20Onegai%20Shitemo%20Yoroshii%20Deshou%20ka%20-%2002%20%28480p%29%20%5B2AF34517%5D.mkv&amp;xl=382991968&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
+                                                                                class="badge badge-front badge-new">480p</span></a><a
+                                                                            href="magnet:?xt=urn:btih:EBK732LFXTVR5KIT7SHXBXPTBQ3K6BOJ&amp;dn=%5BSubsPlease%5D%20Saigo%20ni%20Hitotsu%20dake%20Onegai%20Shitemo%20Yoroshii%20Deshou%20ka%20-%2002%20%28720p%29%20%5BB73755F3%5D.mkv&amp;xl=737145725&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
+                                                                                class="badge badge-front badge-new">720p</span></a><a
+                                                                            href="magnet:?xt=urn:btih:K45PDW7UR5WLW57LBAQZJ4PTXQZMTC4N&amp;dn=%5BSubsPlease%5D%20Saigo%20ni%20Hitotsu%20dake%20Onegai%20Shitemo%20Yoroshii%20Deshou%20ka%20-%2002%20%281080p%29%20%5BAA3B99A0%5D.mkv&amp;xl=1446910666&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
+                                                                                class="badge badge-front badge-new">1080p</span></a><a
+                                                                            href="https://subsplease.org/xdcc/?search=%22%5BSubsPlease%5D+Saigo+ni+Hitotsu+dake+Onegai+Shitemo+Yoroshii+Deshou+ka+-+02%22"><span
+                                                                                class="badge badge-front badge-new hidden-xs">XDCC</span></a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Fri, 03 Oct 2025 19:11:02 +0200"
+                                                                class="time-new-badge">New!</span><span
+                                                                class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="new">
+                                                        <td class="release-item">
+                                                            <div class="sp-img-wrapper"><img class="sp-thumb"
+                                                                    src="https://subsplease.org/wp-content/uploads/2025/10/151754.jpg"
+                                                                    alt="Saigo ni Hitotsu dake Onegai Shitemo Yoroshii Deshou ka — 01">
+                                                                <div class="sp-text">
+                                                                    <div class="sp-title"><a
+                                                                            href="/shows/saigo-ni-hitotsu-dake-onegai-shitemo-yoroshii-deshou-ka"
+                                                                            data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/151754.jpg"
+                                                                            class="processed">Saigo ni Hitotsu dake
+                                                                            Onegai Shitemo Yoroshii Deshou ka —
+                                                                            01</a><span title="Loaded from cache (expires in 5h 51m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            74%</span></div>
+                                                                    <div class="badge-wrapper sp-badges"><a
+                                                                            href="magnet:?xt=urn:btih:6PNPOVDSGZEU46JSW7LZOY7LLF34TEEG&amp;dn=%5BSubsPlease%5D%20Saigo%20ni%20Hitotsu%20dake%20Onegai%20Shitemo%20Yoroshii%20Deshou%20ka%20-%2001%20%28480p%29%20%5B6832D66B%5D.mkv&amp;xl=383321404&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
+                                                                                class="badge badge-front badge-new">480p</span></a><a
+                                                                            href="magnet:?xt=urn:btih:LEEJYERAK6TEOIHVGGREXJJKTGQLK23S&amp;dn=%5BSubsPlease%5D%20Saigo%20ni%20Hitotsu%20dake%20Onegai%20Shitemo%20Yoroshii%20Deshou%20ka%20-%2001%20%28720p%29%20%5BE9BB54F4%5D.mkv&amp;xl=737638046&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
+                                                                                class="badge badge-front badge-new">720p</span></a><a
+                                                                            href="magnet:?xt=urn:btih:5LKVOKXXV6GSCG5VEYKGSMM7SLOWBR3F&amp;dn=%5BSubsPlease%5D%20Saigo%20ni%20Hitotsu%20dake%20Onegai%20Shitemo%20Yoroshii%20Deshou%20ka%20-%2001%20%281080p%29%20%5B95B85377%5D.mkv&amp;xl=1446346777&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
+                                                                                class="badge badge-front badge-new">1080p</span></a><a
+                                                                            href="https://subsplease.org/xdcc/?search=%22%5BSubsPlease%5D+Saigo+ni+Hitotsu+dake+Onegai+Shitemo+Yoroshii+Deshou+ka+-+01%22"><span
+                                                                                class="badge badge-front badge-new hidden-xs">XDCC</span></a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Fri, 03 Oct 2025 19:07:02 +0200"
+                                                                class="time-new-badge">New!</span><span
+                                                                class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="new">
+                                                        <td class="release-item">
+                                                            <div class="sp-img-wrapper"><img class="sp-thumb"
+                                                                    src="https://subsplease.org/wp-content/uploads/2025/07/150545.jpg"
+                                                                    alt="Watari-kun no xx ga Houkai Sunzen — 14">
+                                                                <div class="sp-text">
+                                                                    <div class="sp-title"><a
+                                                                            href="/shows/watari-kun-no-xx-ga-houkai-sunzen"
+                                                                            data-preview-image="https://subsplease.org/wp-content/uploads/2025/07/150545.jpg"
+                                                                            class="processed">Watari-kun no xx ga Houkai
+                                                                            Sunzen — 14</a><span title="Fresh from AniList
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(0, 204, 102);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            59%</span></div>
+                                                                    <div class="badge-wrapper sp-badges"><a
+                                                                            href="magnet:?xt=urn:btih:KP52YBFO64GTCKOPRL2OL3U25TH3A37D&amp;dn=%5BSubsPlease%5D%20Watari-kun%20no%20xx%20ga%20Houkai%20Sunzen%20-%2014%20%28480p%29%20%5B26CCBE98%5D.mkv&amp;xl=383090912&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
+                                                                                class="badge badge-front badge-new">480p</span></a><a
+                                                                            href="magnet:?xt=urn:btih:WCQBI672TCDH2H2BR5ZMIGNTL6VJTT7F&amp;dn=%5BSubsPlease%5D%20Watari-kun%20no%20xx%20ga%20Houkai%20Sunzen%20-%2014%20%28720p%29%20%5B493452D7%5D.mkv&amp;xl=738073359&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
+                                                                                class="badge badge-front badge-new">720p</span></a><a
+                                                                            href="magnet:?xt=urn:btih:NJCKAG7ZPF25PHLKIPCNA4W67DFYDASX&amp;dn=%5BSubsPlease%5D%20Watari-kun%20no%20xx%20ga%20Houkai%20Sunzen%20-%2014%20%281080p%29%20%5BFEFE6A20%5D.mkv&amp;xl=1446896939&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
+                                                                                class="badge badge-front badge-new">1080p</span></a><a
+                                                                            href="https://subsplease.org/xdcc/?search=%22%5BSubsPlease%5D+Watari-kun+no+xx+ga+Houkai+Sunzen+-+14%22"><span
+                                                                                class="badge badge-front badge-new hidden-xs">XDCC</span></a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Fri, 03 Oct 2025 18:17:13 +0200"
+                                                                class="time-new-badge">New!</span><span
+                                                                class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="new">
+                                                        <td class="release-item">
+                                                            <div class="sp-img-wrapper"><img class="sp-thumb"
+                                                                    src="https://subsplease.org/wp-content/uploads/2025/10/152179.jpg"
+                                                                    alt="Shabake — 01">
+                                                                <div class="sp-text">
+                                                                    <div class="sp-title"><a href="/shows/shabake"
+                                                                            data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/152179.jpg"
+                                                                            class="processed">Shabake — 01</a><span
+                                                                            title="Loaded from cache (expires in 5h 51m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            53%</span></div>
+                                                                    <div class="badge-wrapper sp-badges"><a
+                                                                            href="magnet:?xt=urn:btih:WB5EOQMEXNVYJD3GFUTHRRNS2257DAMH&amp;dn=%5BSubsPlease%5D%20Shabake%20-%2001%20%28480p%29%20%5B6C572E6E%5D.mkv&amp;xl=370911248&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
+                                                                                class="badge badge-front badge-new">480p</span></a><a
+                                                                            href="magnet:?xt=urn:btih:BV4QS2HNN2GZGGRNZNLYQ3AKP2BKJDIK&amp;dn=%5BSubsPlease%5D%20Shabake%20-%2001%20%28720p%29%20%5BAFEF166C%5D.mkv&amp;xl=709155895&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
+                                                                                class="badge badge-front badge-new">720p</span></a><a
+                                                                            href="magnet:?xt=urn:btih:EMZ4WKK5XG25WCEK5YFIE24W5J7GLWFV&amp;dn=%5BSubsPlease%5D%20Shabake%20-%2001%20%281080p%29%20%5B7E3C60B0%5D.mkv&amp;xl=1393634174&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
+                                                                                class="badge badge-front badge-new">1080p</span></a><a
+                                                                            href="https://subsplease.org/xdcc/?search=%22%5BSubsPlease%5D+Shabake+-+01%22"><span
+                                                                                class="badge badge-front badge-new hidden-xs">XDCC</span></a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Fri, 03 Oct 2025 18:01:33 +0200"
+                                                                class="time-new-badge">New!</span><span
+                                                                class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="new">
+                                                        <td class="release-item">
+                                                            <div class="sp-img-wrapper"><img class="sp-thumb"
+                                                                    src="https://subsplease.org/wp-content/uploads/2025/07/150666.jpg"
+                                                                    alt="Tougen Anki — 13">
+                                                                <div class="sp-text">
+                                                                    <div class="sp-title"><a href="/shows/tougen-anki"
+                                                                            data-preview-image="https://subsplease.org/wp-content/uploads/2025/07/150666.jpg"
+                                                                            class="processed">Tougen Anki — 13</a><span
+                                                                            title="Loaded from cache (expires in 5h 51m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            65%</span></div>
+                                                                    <div class="badge-wrapper sp-badges"><a
+                                                                            href="magnet:?xt=urn:btih:3I2LVEPJX3HQIGGOWAZW5OYIEYQFPSYY&amp;dn=%5BSubsPlease%5D%20Tougen%20Anki%20-%2013%20%28480p%29%20%5B30D8D09A%5D.mkv&amp;xl=389508205&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
+                                                                                class="badge badge-front badge-new">480p</span></a><a
+                                                                            href="magnet:?xt=urn:btih:JAOWJIBKMT4BARVZTMNAX6HGZXYFE45C&amp;dn=%5BSubsPlease%5D%20Tougen%20Anki%20-%2013%20%28720p%29%20%5B58729A9F%5D.mkv&amp;xl=748826568&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
+                                                                                class="badge badge-front badge-new">720p</span></a><a
+                                                                            href="magnet:?xt=urn:btih:QHZH7ULTV3NMAFPCW4LNIPCCUNWMHTRP&amp;dn=%5BSubsPlease%5D%20Tougen%20Anki%20-%2013%20%281080p%29%20%5B1F99BA51%5D.mkv&amp;xl=1462903996&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
+                                                                                class="badge badge-front badge-new">1080p</span></a><a
+                                                                            href="https://subsplease.org/xdcc/?search=%22%5BSubsPlease%5D+Tougen+Anki+-+13%22"><span
+                                                                                class="badge badge-front badge-new hidden-xs">XDCC</span></a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Fri, 03 Oct 2025 17:31:53 +0200"
+                                                                class="time-new-badge">New!</span><span
+                                                                class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="new">
+                                                        <td class="release-item">
+                                                            <div class="sp-img-wrapper"><img class="sp-thumb"
                                                                     src="https://subsplease.org/wp-content/uploads/2025/10/151246.jpg"
                                                                     alt="Mugen Gacha — 01">
                                                                 <div class="sp-text">
                                                                     <div class="sp-title"><a href="/shows/mugen-gacha"
                                                                             data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/151246.jpg"
                                                                             class="processed">Mugen Gacha — 01</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(153, 153, 153);"
-                                                                            title="AniList fetch failed
-Click to retry">N/A</span></div>
+                                                                            title="Loaded from cache (expires in 5h 51m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            64%</span></div>
                                                                     <div class="badge-wrapper sp-badges"><a
                                                                             href="magnet:?xt=urn:btih:YGTDEJXOD7QGLPVWBWHTZ7IJ66GK4Y6W&amp;dn=%5BSubsPlease%5D%20Mugen%20Gacha%20-%2001%20%28480p%29%20%5BE63FE803%5D.mkv&amp;xl=171049985&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
                                                                                 class="badge badge-front badge-new">480p</span></a><a
@@ -652,11 +901,15 @@ Click to retry">N/A</span></div>
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td class="release-item-time"><span
+                                                        <td class="release-item-time" style="position: relative;"><span
                                                                 title="Fri, 03 Oct 2025 17:05:21 +0200"
-                                                                class="time-new-badge">New!</span></td>
+                                                                class="time-new-badge">New!</span><span
+                                                                class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
+                                                        </td>
                                                     </tr>
-                                                    <tr class="new">
+                                                    <tr>
                                                         <td class="release-item">
                                                             <div class="sp-img-wrapper"><img class="sp-thumb"
                                                                     src="https://subsplease.org/wp-content/uploads/2025/07/147273.jpg"
@@ -666,29 +919,32 @@ Click to retry">N/A</span></div>
                                                                             href="/shows/dragon-raja-s2"
                                                                             data-preview-image="https://subsplease.org/wp-content/uploads/2025/07/147273.jpg"
                                                                             class="processed">Dragon Raja S2 —
-                                                                            14</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 5h 49m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            14</a><span title="Loaded from cache (expires in 5h 51m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
                                                                             69%</span></div>
                                                                     <div class="badge-wrapper sp-badges"><a
                                                                             href="magnet:?xt=urn:btih:NNFDKGBWF2HR7V53H5N42LFAXSUJ7A5W&amp;dn=%5BSubsPlease%5D%20Dragon%20Raja%20S2%20-%2014%20%28480p%29%20%5B2B86718A%5D.mkv&amp;xl=383592569&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">480p</span></a><a
+                                                                                class="badge badge-front">480p</span></a><a
                                                                             href="magnet:?xt=urn:btih:3MDC35AMY7MOUE26QTBZMAVYK7VU3E45&amp;dn=%5BSubsPlease%5D%20Dragon%20Raja%20S2%20-%2014%20%28720p%29%20%5B84AA716E%5D.mkv&amp;xl=738188852&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">720p</span></a><a
+                                                                                class="badge badge-front">720p</span></a><a
                                                                             href="magnet:?xt=urn:btih:HUKL557DQ6EPVCDUUUAIKSZ67SCM3HQI&amp;dn=%5BSubsPlease%5D%20Dragon%20Raja%20S2%20-%2014%20%281080p%29%20%5B760F660B%5D.mkv&amp;xl=1442338262&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">1080p</span></a><a
+                                                                                class="badge badge-front">1080p</span></a><a
                                                                             href="https://subsplease.org/xdcc/?search=%22%5BSubsPlease%5D+Dragon+Raja+S2+-+14%22"><span
-                                                                                class="badge badge-front badge-new hidden-xs">XDCC</span></a>
+                                                                                class="badge badge-front hidden-xs">XDCC</span></a>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Fri, 03 Oct 2025 04:01:45 +0200"
-                                                                class="time-new-badge">New!</span></td>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Fri, 03 Oct 2025 04:01:45 +0200">Oct
+                                                                3rd</span><span class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
+                                                        </td>
                                                     </tr>
-                                                    <tr class="new">
+                                                    <tr>
                                                         <td class="release-item">
                                                             <div class="sp-img-wrapper"><img class="sp-thumb"
                                                                     src="https://subsplease.org/wp-content/uploads/2025/10/152012.jpg"
@@ -698,29 +954,32 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                             href="/shows/akujiki-reijou-to-kyouketsu-koushaku"
                                                                             data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/152012.jpg"
                                                                             class="processed">Akujiki Reijou to
-                                                                            Kyouketsu Koushaku — 01</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 5h 49m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
-                                                                            67%</span></div>
+                                                                            Kyouketsu Koushaku — 01</a><span title="Loaded from cache (expires in 5h 51m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            66%</span></div>
                                                                     <div class="badge-wrapper sp-badges"><a
                                                                             href="magnet:?xt=urn:btih:MDR3NEMIFLEJOT2BMAQEAZQWKFFT3HAB&amp;dn=%5BSubsPlease%5D%20Akujiki%20Reijou%20to%20Kyouketsu%20Koushaku%20-%2001%20%28480p%29%20%5BF78870A1%5D.mkv&amp;xl=393541974&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">480p</span></a><a
+                                                                                class="badge badge-front">480p</span></a><a
                                                                             href="magnet:?xt=urn:btih:ZNAQUMTFN4T4MAIEWFLJGGULJ5BYLOYB&amp;dn=%5BSubsPlease%5D%20Akujiki%20Reijou%20to%20Kyouketsu%20Koushaku%20-%2001%20%28720p%29%20%5BEC890460%5D.mkv&amp;xl=756900045&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">720p</span></a><a
+                                                                                class="badge badge-front">720p</span></a><a
                                                                             href="magnet:?xt=urn:btih:QNXHCZ5J2OKAAFLTLQLNXKI5CVJZYJ6X&amp;dn=%5BSubsPlease%5D%20Akujiki%20Reijou%20to%20Kyouketsu%20Koushaku%20-%2001%20%281080p%29%20%5B15AED5AF%5D.mkv&amp;xl=1482254870&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">1080p</span></a><a
+                                                                                class="badge badge-front">1080p</span></a><a
                                                                             href="https://subsplease.org/xdcc/?search=%22%5BSubsPlease%5D+Akujiki+Reijou+to+Kyouketsu+Koushaku+-+01%22"><span
-                                                                                class="badge badge-front badge-new hidden-xs">XDCC</span></a>
+                                                                                class="badge badge-front hidden-xs">XDCC</span></a>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Thu, 02 Oct 2025 19:02:03 +0200"
-                                                                class="time-new-badge">New!</span></td>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Thu, 02 Oct 2025 19:02:03 +0200">Oct
+                                                                2nd</span><span class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
+                                                        </td>
                                                     </tr>
-                                                    <tr class="new">
+                                                    <tr>
                                                         <td class="release-item">
                                                             <div class="sp-img-wrapper"><img class="sp-thumb"
                                                                     src="https://subsplease.org/wp-content/uploads/2025/07/150649.jpg"
@@ -730,29 +989,32 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                             href="/shows/futari-solo-camp"
                                                                             data-preview-image="https://subsplease.org/wp-content/uploads/2025/07/150649.jpg"
                                                                             class="processed">Futari Solo Camp —
-                                                                            13</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 5h 49m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            13</a><span title="Loaded from cache (expires in 5h 51m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
                                                                             62%</span></div>
                                                                     <div class="badge-wrapper sp-badges"><a
                                                                             href="magnet:?xt=urn:btih:RGTWBP7TNJMNLM4XSG7Y7WMDEKR64XAB&amp;dn=%5BSubsPlease%5D%20Futari%20Solo%20Camp%20-%2013%20%28480p%29%20%5BA4E5E8C5%5D.mkv&amp;xl=381770827&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">480p</span></a><a
+                                                                                class="badge badge-front">480p</span></a><a
                                                                             href="magnet:?xt=urn:btih:OQQXW4P3DAVQJMV4VNGP2YF3R4MRV32V&amp;dn=%5BSubsPlease%5D%20Futari%20Solo%20Camp%20-%2013%20%28720p%29%20%5B297E7F7D%5D.mkv&amp;xl=734759109&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">720p</span></a><a
+                                                                                class="badge badge-front">720p</span></a><a
                                                                             href="magnet:?xt=urn:btih:2YEHGLSIWT2TUU4WZ3NMV7KTXJQZE3PN&amp;dn=%5BSubsPlease%5D%20Futari%20Solo%20Camp%20-%2013%20%281080p%29%20%5BF06E6091%5D.mkv&amp;xl=1446895437&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">1080p</span></a><a
+                                                                                class="badge badge-front">1080p</span></a><a
                                                                             href="https://subsplease.org/xdcc/?search=%22%5BSubsPlease%5D+Futari+Solo+Camp+-+13%22"><span
-                                                                                class="badge badge-front badge-new hidden-xs">XDCC</span></a>
+                                                                                class="badge badge-front hidden-xs">XDCC</span></a>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Thu, 02 Oct 2025 18:31:36 +0200"
-                                                                class="time-new-badge">New!</span></td>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Thu, 02 Oct 2025 18:31:36 +0200">Oct
+                                                                2nd</span><span class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
+                                                        </td>
                                                     </tr>
-                                                    <tr class="new">
+                                                    <tr>
                                                         <td class="release-item">
                                                             <div class="sp-img-wrapper"><img class="sp-thumb"
                                                                     src="https://subsplease.org/wp-content/uploads/2025/10/152368.jpg"
@@ -762,29 +1024,32 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                             href="/shows/watashi-wo-tabetai-hitodenashi-2"
                                                                             data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/152368.jpg"
                                                                             class="processed">Watashi wo Tabetai,
-                                                                            Hitodenashi — 01</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 5h 49m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            Hitodenashi — 01</a><span title="Loaded from cache (expires in 5h 51m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
                                                                             71%</span></div>
                                                                     <div class="badge-wrapper sp-badges"><a
                                                                             href="magnet:?xt=urn:btih:IU5MPKGFVHHEFTRVZRCQAM46IZUN32QL&amp;dn=%5BSubsPlease%5D%20Watashi%20wo%20Tabetai%2C%20Hitodenashi%20-%2001%20%28480p%29%20%5B6789F907%5D.mkv&amp;xl=381899157&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">480p</span></a><a
+                                                                                class="badge badge-front">480p</span></a><a
                                                                             href="magnet:?xt=urn:btih:J43DRFPWM3QHVVWRJ22FRKSGERRT274U&amp;dn=%5BSubsPlease%5D%20Watashi%20wo%20Tabetai%2C%20Hitodenashi%20-%2001%20%28720p%29%20%5BFDCCDA1E%5D.mkv&amp;xl=736992930&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">720p</span></a><a
+                                                                                class="badge badge-front">720p</span></a><a
                                                                             href="magnet:?xt=urn:btih:YN2NP2MJ4VTARKB6MWHEUI6HNMURCIYG&amp;dn=%5BSubsPlease%5D%20Watashi%20wo%20Tabetai%2C%20Hitodenashi%20-%2001%20%281080p%29%20%5B2EE0A6C4%5D.mkv&amp;xl=1441927239&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">1080p</span></a><a
+                                                                                class="badge badge-front">1080p</span></a><a
                                                                             href="https://subsplease.org/xdcc/?search=%22%5BSubsPlease%5D+Watashi+wo+Tabetai%2C+Hitodenashi+-+01%22"><span
-                                                                                class="badge badge-front badge-new hidden-xs">XDCC</span></a>
+                                                                                class="badge badge-front hidden-xs">XDCC</span></a>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Thu, 02 Oct 2025 18:09:44 +0200"
-                                                                class="time-new-badge">New!</span></td>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Thu, 02 Oct 2025 18:09:44 +0200">Oct
+                                                                2nd</span><span class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
+                                                        </td>
                                                     </tr>
-                                                    <tr class="new">
+                                                    <tr>
                                                         <td class="release-item">
                                                             <div class="sp-img-wrapper"><img class="sp-thumb"
                                                                     src="https://subsplease.org/wp-content/uploads/2025/10/152233.jpg"
@@ -794,31 +1059,35 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                             href="/shows/bukiyou-na-senpai-2"
                                                                             data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/152233.jpg"
                                                                             class="processed">Bukiyou na Senpai. —
-                                                                            01</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 5h 49m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
-                                                                            66%</span></div>
+                                                                            01</a><span title="Loaded from cache (expires in 5h 28m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            65%</span></div>
                                                                     <div class="badge-wrapper sp-badges"><a
                                                                             href="magnet:?xt=urn:btih:74W4QSCRBC36QBLTW737LSQBM3DKCBDW&amp;dn=%5BSubsPlease%5D%20Bukiyou%20na%20Senpai.%20-%2001%20%28480p%29%20%5BF526368F%5D.mkv&amp;xl=384340137&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">480p</span></a><a
+                                                                                class="badge badge-front">480p</span></a><a
                                                                             href="magnet:?xt=urn:btih:2ELCBE3ZSBF2FKJ37KUXTRP2JBMHPAZU&amp;dn=%5BSubsPlease%5D%20Bukiyou%20na%20Senpai.%20-%2001%20%28720p%29%20%5B965342CD%5D.mkv&amp;xl=739175344&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">720p</span></a><a
+                                                                                class="badge badge-front">720p</span></a><a
                                                                             href="magnet:?xt=urn:btih:WNIREAF7IH6B6H2ORZZBZS2QMYU6YDVH&amp;dn=%5BSubsPlease%5D%20Bukiyou%20na%20Senpai.%20-%2001%20%281080p%29%20%5BBFA173A9%5D.mkv&amp;xl=1451419505&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">1080p</span></a><a
+                                                                                class="badge badge-front">1080p</span></a><a
                                                                             href="https://subsplease.org/xdcc/?search=%22%5BSubsPlease%5D+Bukiyou+na+Senpai.+-+01%22"><span
-                                                                                class="badge badge-front badge-new hidden-xs">XDCC</span></a>
+                                                                                class="badge badge-front hidden-xs">XDCC</span></a>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Thu, 02 Oct 2025 18:09:02 +0200"
-                                                                class="time-new-badge">New!</span></td>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Thu, 02 Oct 2025 18:09:02 +0200">Oct
+                                                                2nd</span><span class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
+                                                        </td>
                                                     </tr>
-                                                    <tr class="new">
+                                                    <tr>
                                                         <td class="release-item">
-                                                            <div class="sp-img-wrapper"><img class="sp-thumb"
+                                                            <div class="sp-img-wrapper sp-favorite"><img
+                                                                    class="sp-thumb"
                                                                     src="https://subsplease.org/wp-content/uploads/2025/09/151734.jpg"
                                                                     alt="Towa no Yuugure — 01">
                                                                 <div class="sp-text">
@@ -826,27 +1095,30 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                             href="/shows/towa-no-yuugure"
                                                                             data-preview-image="https://subsplease.org/wp-content/uploads/2025/09/151734.jpg"
                                                                             class="processed">Towa no Yuugure —
-                                                                            01</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 5h 49m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            01</a><span title="Loaded from cache (expires in 5h 51m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
                                                                             67%</span></div>
                                                                     <div class="badge-wrapper sp-badges"><a
                                                                             href="magnet:?xt=urn:btih:RWN6IHZWBIO4KOSAPIXYDOIB6HJITHB7&amp;dn=%5BSubsPlease%5D%20Towa%20no%20Yuugure%20-%2001%20%28480p%29%20%5BA16C07C4%5D.mkv&amp;xl=175955885&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">480p</span></a><a
+                                                                                class="badge badge-front">480p</span></a><a
                                                                             href="magnet:?xt=urn:btih:2EWOUVUIO5PNR3L7ORZVEXWUOVG7XSPO&amp;dn=%5BSubsPlease%5D%20Towa%20no%20Yuugure%20-%2001%20%28720p%29%20%5B61E5559B%5D.mkv&amp;xl=519148501&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">720p</span></a><a
+                                                                                class="badge badge-front">720p</span></a><a
                                                                             href="magnet:?xt=urn:btih:MTZVV5GJZTCA7UGWWBDRL25EUGCSODQA&amp;dn=%5BSubsPlease%5D%20Towa%20no%20Yuugure%20-%2001%20%281080p%29%20%5B2798B0AF%5D.mkv&amp;xl=965864780&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front badge-new">1080p</span></a><a
+                                                                                class="badge badge-front">1080p</span></a><a
                                                                             href="https://subsplease.org/xdcc/?search=%22%5BSubsPlease%5D+Towa+no+Yuugure+-+01%22"><span
-                                                                                class="badge badge-front badge-new hidden-xs">XDCC</span></a>
+                                                                                class="badge badge-front hidden-xs">XDCC</span></a>
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Thu, 02 Oct 2025 17:58:14 +0200"
-                                                                class="time-new-badge">New!</span></td>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Thu, 02 Oct 2025 17:58:14 +0200">Oct
+                                                                2nd</span><span class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(255, 215, 0);">★</span>
+                                                        </td>
                                                     </tr>
                                                     <tr>
                                                         <td class="release-item">
@@ -858,10 +1130,10 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                             href="/shows/kakuriyo-no-yadomeshi-ni"
                                                                             data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/151364.jpg"
                                                                             class="processed">Kakuriyo no Yadomeshi Ni —
-                                                                            01</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 5h 18m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            01</a><span title="Loaded from cache (expires in 5h 51m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
                                                                             64%</span></div>
                                                                     <div class="badge-wrapper sp-badges"><a
                                                                             href="magnet:?xt=urn:btih:UZJW43FBZMNB35LAXNCSFOFFDMD47ZVX&amp;dn=%5BSubsPlease%5D%20Kakuriyo%20no%20Yadomeshi%20Ni%20-%2001%20%28480p%29%20%5B1827EF8B%5D.mkv&amp;xl=388895602&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
@@ -876,8 +1148,11 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Wed, 01 Oct 2025 23:49:33 +0200">Oct 1st</span>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Wed, 01 Oct 2025 23:49:33 +0200">Oct
+                                                                1st</span><span class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -890,10 +1165,10 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                             href="/shows/renegade-immortal"
                                                                             data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/149708.jpg"
                                                                             class="processed">Renegade Immortal — 01-24
-                                                                            (Batch)</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 5h 16m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            (Batch)</a><span title="Loaded from cache (expires in 5h 46m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
                                                                             78%</span></div>
                                                                     <div class="badge-wrapper sp-badges"><a
                                                                             href="magnet:?xt=urn:btih:AG7JBH7BXKDKCSD5Q3ZAW66LPME64HGC&amp;dn=%5BSubsPlease%5D%20Renegade%20Immortal%20%2801-24%29%20%28480p%29%20%5BBatch%5D&amp;xl=8330330301&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
@@ -908,8 +1183,11 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Wed, 01 Oct 2025 20:52:36 +0200">Oct 1st</span>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Wed, 01 Oct 2025 20:52:36 +0200">Oct
+                                                                1st</span><span class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -922,10 +1200,10 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                             href="/shows/lets-play-quest-darake-no-my-life"
                                                                             data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/150376.jpg"
                                                                             class="processed">Let's Play - Quest-darake
-                                                                            no My Life — 01</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 3h 52m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            no My Life — 01</a><span title="Loaded from cache (expires in 5h 46m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
                                                                             56%</span></div>
                                                                     <div class="badge-wrapper sp-badges"><a
                                                                             href="magnet:?xt=urn:btih:4ORI3JMMMFU5H4GD676OQ42L7NENVQI3&amp;dn=%5BSubsPlease%5D%20Let%27s%20Play%20-%20Quest-darake%20no%20My%20Life%20-%2001%20%28480p%29%20%5BE94CB9B7%5D.mkv&amp;xl=371910040&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
@@ -940,8 +1218,11 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Wed, 01 Oct 2025 18:18:07 +0200">Oct 1st</span>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Wed, 01 Oct 2025 18:18:07 +0200">Oct
+                                                                1st</span><span class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -954,10 +1235,10 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                             href="/shows/mushoku-no-eiyuu"
                                                                             data-preview-image="https://subsplease.org/wp-content/uploads/2025/09/151097.jpg"
                                                                             class="processed">Mushoku no Eiyuu —
-                                                                            02</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 3h 52m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            02</a><span title="Loaded from cache (expires in 5h 30m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
                                                                             60%</span></div>
                                                                     <div class="badge-wrapper sp-badges"><a
                                                                             href="magnet:?xt=urn:btih:LWRLPD6GOT4ORXVPFL3LW62VKONNSCGN&amp;dn=%5BSubsPlease%5D%20Mushoku%20no%20Eiyuu%20-%2002%20%28480p%29%20%5B68217410%5D.mkv&amp;xl=173966906&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
@@ -972,8 +1253,11 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Wed, 01 Oct 2025 15:02:12 +0200">Oct 1st</span>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Wed, 01 Oct 2025 15:02:12 +0200">Oct
+                                                                1st</span><span class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -986,11 +1270,11 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                             href="/shows/yano-kun-no-futsuu-no-hibi"
                                                                             data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/152332.jpg"
                                                                             class="processed">Yano-kun no Futsuu no Hibi
-                                                                            — 01</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 5h 49m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
-                                                                            65%</span></div>
+                                                                            — 01</a><span title="Loaded from cache (expires in 5h 28m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            66%</span></div>
                                                                     <div class="badge-wrapper sp-badges"><a
                                                                             href="magnet:?xt=urn:btih:IGLBS7FQKXHAKBE5D5YFC6OK2MQIM2L5&amp;dn=%5BSubsPlease%5D%20Yano-kun%20no%20Futsuu%20no%20Hibi%20-%2001%20%28480p%29%20%5B12FA4FBE%5D.mkv&amp;xl=370956147&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
                                                                                 class="badge badge-front">480p</span></a><a
@@ -1004,8 +1288,11 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Tue, 30 Sep 2025 19:39:19 +0200">Sep 30th</span>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Tue, 30 Sep 2025 19:39:19 +0200">Sep
+                                                                30th</span><span class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -1018,10 +1305,10 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                             href="/shows/kijin-gentoushou"
                                                                             data-preview-image="https://subsplease.org/wp-content/uploads/2025/03/142919.jpg"
                                                                             class="processed">Kijin Gentoushou —
-                                                                            24</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 5h 49m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            24</a><span title="Loaded from cache (expires in 5h 30m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
                                                                             70%</span></div>
                                                                     <div class="badge-wrapper sp-badges"><a
                                                                             href="magnet:?xt=urn:btih:FONS3BKCVHPS36UWN6WKXHIERFV5MIFN&amp;dn=%5BSubsPlease%5D%20Kijin%20Gentoushou%20-%2024%20%28480p%29%20%5B55C8473A%5D.mkv&amp;xl=174231554&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
@@ -1036,8 +1323,11 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Mon, 29 Sep 2025 23:04:56 +0200">Sep 29th</span>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Mon, 29 Sep 2025 23:04:56 +0200">Sep
+                                                                29th</span><span class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -1050,10 +1340,10 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                             href="/shows/sozai-saishuka-no-isekai-ryokouki"
                                                                             data-preview-image="https://subsplease.org/wp-content/uploads/2025/09/151136.jpg"
                                                                             class="processed">Sozai Saishuka no Isekai
-                                                                            Ryokouki — 01</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 5h 17m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            Ryokouki — 01</a><span title="Loaded from cache (expires in 5h 24m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
                                                                             56%</span></div>
                                                                     <div class="badge-wrapper sp-badges"><a
                                                                             href="magnet:?xt=urn:btih:H4VOADPZGVIFFYU4OMEIQ52ZE2NUGW3N&amp;dn=%5BSubsPlease%5D%20Sozai%20Saishuka%20no%20Isekai%20Ryokouki%20-%2001%20%28480p%29%20%5BE3404D36%5D.mkv&amp;xl=384210511&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
@@ -1068,8 +1358,11 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Mon, 29 Sep 2025 18:45:13 +0200">Sep 29th</span>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Mon, 29 Sep 2025 18:45:13 +0200">Sep
+                                                                29th</span><span class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -1082,10 +1375,10 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                             href="/shows/summer-pockets"
                                                                             data-preview-image="https://subsplease.org/wp-content/uploads/2025/04/148602.jpg"
                                                                             class="processed">Summer Pockets —
-                                                                            26</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 3h 52m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
+                                                                            26</a><span title="Loaded from cache (expires in 5h 19m)
+Click to refresh" style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"><img draggable="false" role="img"
+                                                                                class="emoji" alt="⭐"
+                                                                                src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
                                                                             71%</span></div>
                                                                     <div class="badge-wrapper sp-badges"><a
                                                                             href="magnet:?xt=urn:btih:CXN4S3VPTO7CI7ZPOXN67LR4QHZUC2WT&amp;dn=%5BSubsPlease%5D%20Summer%20Pockets%20-%2026%20%28480p%29%20%5B5EA23B76%5D.mkv&amp;xl=430873670&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
@@ -1100,168 +1393,11 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Mon, 29 Sep 2025 17:02:10 +0200">Sep 29th</span>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="release-item">
-                                                            <div class="sp-img-wrapper"><img class="sp-thumb"
-                                                                    src="https://subsplease.org/wp-content/uploads/2025/07/150436.jpg"
-                                                                    alt="Yami Shibai 15 — 12">
-                                                                <div class="sp-text">
-                                                                    <div class="sp-title"><a
-                                                                            href="/shows/yami-shibai-15"
-                                                                            data-preview-image="https://subsplease.org/wp-content/uploads/2025/07/150436.jpg"
-                                                                            class="processed">Yami Shibai 15 —
-                                                                            12</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 3h 52m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
-                                                                            51%</span></div>
-                                                                    <div class="badge-wrapper sp-badges"><a
-                                                                            href="magnet:?xt=urn:btih:KNBKQCJF6L3RRPLBUYWKAEKS7GOHRSEI&amp;dn=%5BSubsPlease%5D%20Yami%20Shibai%2015%20-%2012%20%28480p%29%20%5B1EFE3EE2%5D.mkv&amp;xl=70065308&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front">480p</span></a><a
-                                                                            href="magnet:?xt=urn:btih:JMJUZKRBYSG2SIZ7CGDXBWOQ4SFGGCSF&amp;dn=%5BSubsPlease%5D%20Yami%20Shibai%2015%20-%2012%20%28720p%29%20%5BEE393BED%5D.mkv&amp;xl=128875163&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front">720p</span></a><a
-                                                                            href="magnet:?xt=urn:btih:P4FU7NRLQKDIAVB2FENUVJEOC5XTA42G&amp;dn=%5BSubsPlease%5D%20Yami%20Shibai%2015%20-%2012%20%281080p%29%20%5BAEB2814B%5D.mkv&amp;xl=247047294&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front">1080p</span></a><a
-                                                                            href="https://subsplease.org/xdcc/?search=%22%5BSubsPlease%5D+Yami+Shibai+15+-+12%22"><span
-                                                                                class="badge badge-front hidden-xs">XDCC</span></a>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Sun, 28 Sep 2025 21:45:59 +0200">Sep 28th</span>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="release-item">
-                                                            <div class="sp-img-wrapper"><img class="sp-thumb"
-                                                                    src="https://subsplease.org/wp-content/uploads/2025/07/150592.jpg"
-                                                                    alt="Who Made Me a Princess — 03">
-                                                                <div class="sp-text">
-                                                                    <div class="sp-title"><a
-                                                                            href="/shows/who-made-me-a-princess"
-                                                                            data-preview-image="https://subsplease.org/wp-content/uploads/2025/07/150592.jpg"
-                                                                            class="processed">Who Made Me a Princess —
-                                                                            03</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 3h 52m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
-                                                                            74%</span></div>
-                                                                    <div class="badge-wrapper sp-badges"><a
-                                                                            href="magnet:?xt=urn:btih:4HL6RMCJOWN4Q6QE6JYSCB3VJPVMDVH6&amp;dn=%5BSubsPlease%5D%20Who%20Made%20Me%20a%20Princess%20-%2003%20%28480p%29%20%5B5DDFBB1E%5D.mkv&amp;xl=333094386&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front">480p</span></a><a
-                                                                            href="magnet:?xt=urn:btih:FAZ225H6SERVXJNF5FZYCB6IUJKGZA4V&amp;dn=%5BSubsPlease%5D%20Who%20Made%20Me%20a%20Princess%20-%2003%20%28720p%29%20%5B08F6B301%5D.mkv&amp;xl=639193333&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front">720p</span></a><a
-                                                                            href="magnet:?xt=urn:btih:LR4X5TLZTP4SNR3H24ZKJ4KSKVTK3JII&amp;dn=%5BSubsPlease%5D%20Who%20Made%20Me%20a%20Princess%20-%2003%20%281080p%29%20%5B08643154%5D.mkv&amp;xl=1251654413&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front">1080p</span></a><a
-                                                                            href="https://subsplease.org/xdcc/?search=%22%5BSubsPlease%5D+Who+Made+Me+a+Princess+-+03%22"><span
-                                                                                class="badge badge-front hidden-xs">XDCC</span></a>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Sun, 28 Sep 2025 19:47:31 +0200">Sep 28th</span>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="release-item">
-                                                            <div class="sp-img-wrapper"><img class="sp-thumb"
-                                                                    src="https://subsplease.org/wp-content/uploads/2025/07/150592.jpg"
-                                                                    alt="Who Made Me a Princess — 02">
-                                                                <div class="sp-text">
-                                                                    <div class="sp-title"><a
-                                                                            href="/shows/who-made-me-a-princess"
-                                                                            data-preview-image="https://subsplease.org/wp-content/uploads/2025/07/150592.jpg"
-                                                                            class="processed">Who Made Me a Princess —
-                                                                            02</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 3h 52m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
-                                                                            74%</span></div>
-                                                                    <div class="badge-wrapper sp-badges"><a
-                                                                            href="magnet:?xt=urn:btih:FHJUHZPAU3NKCNTFGYBRCAWLZLD56RVC&amp;dn=%5BSubsPlease%5D%20Who%20Made%20Me%20a%20Princess%20-%2002%20%28480p%29%20%5BF236FA11%5D.mkv&amp;xl=331432190&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front">480p</span></a><a
-                                                                            href="magnet:?xt=urn:btih:HO7OBEB7TRRNCATKPOPLRKSAOCDU6MNK&amp;dn=%5BSubsPlease%5D%20Who%20Made%20Me%20a%20Princess%20-%2002%20%28720p%29%20%5BD8B83F41%5D.mkv&amp;xl=636631689&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front">720p</span></a><a
-                                                                            href="magnet:?xt=urn:btih:SSEI7FQ55WEL3REMQOYXSQLI2OFZGH4D&amp;dn=%5BSubsPlease%5D%20Who%20Made%20Me%20a%20Princess%20-%2002%20%281080p%29%20%5B7EDD60B0%5D.mkv&amp;xl=1248078773&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front">1080p</span></a><a
-                                                                            href="https://subsplease.org/xdcc/?search=%22%5BSubsPlease%5D+Who+Made+Me+a+Princess+-+02%22"><span
-                                                                                class="badge badge-front hidden-xs">XDCC</span></a>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Sun, 28 Sep 2025 19:45:30 +0200">Sep 28th</span>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="release-item">
-                                                            <div class="sp-img-wrapper"><img class="sp-thumb"
-                                                                    src="https://subsplease.org/wp-content/uploads/2025/07/150592.jpg"
-                                                                    alt="Who Made Me a Princess — 01">
-                                                                <div class="sp-text">
-                                                                    <div class="sp-title"><a
-                                                                            href="/shows/who-made-me-a-princess"
-                                                                            data-preview-image="https://subsplease.org/wp-content/uploads/2025/07/150592.jpg"
-                                                                            class="processed">Who Made Me a Princess —
-                                                                            01</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 3h 52m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
-                                                                            74%</span></div>
-                                                                    <div class="badge-wrapper sp-badges"><a
-                                                                            href="magnet:?xt=urn:btih:Y6Z3ASN67B4XDSVRORRFMY6RDKOHGTDB&amp;dn=%5BSubsPlease%5D%20Who%20Made%20Me%20a%20Princess%20-%2001%20%28480p%29%20%5B6C3985F5%5D.mkv&amp;xl=338727008&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front">480p</span></a><a
-                                                                            href="magnet:?xt=urn:btih:FK6XHTEF4NWTXMKYJOZPPZM6GNR65UEC&amp;dn=%5BSubsPlease%5D%20Who%20Made%20Me%20a%20Princess%20-%2001%20%28720p%29%20%5B19833C80%5D.mkv&amp;xl=652391091&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front">720p</span></a><a
-                                                                            href="magnet:?xt=urn:btih:4GUDX5X7UQVR6ZD6RTBO6PFEMYC4W337&amp;dn=%5BSubsPlease%5D%20Who%20Made%20Me%20a%20Princess%20-%2001%20%281080p%29%20%5BD8C68C07%5D.mkv&amp;xl=1278309150&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front">1080p</span></a><a
-                                                                            href="https://subsplease.org/xdcc/?search=%22%5BSubsPlease%5D+Who+Made+Me+a+Princess+-+01%22"><span
-                                                                                class="badge badge-front hidden-xs">XDCC</span></a>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Sun, 28 Sep 2025 19:43:54 +0200">Sep 28th</span>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="release-item">
-                                                            <div class="sp-img-wrapper"><img class="sp-thumb"
-                                                                    src="https://subsplease.org/wp-content/uploads/2025/07/150443.jpg"
-                                                                    alt="Hotel Inhumans — 13">
-                                                                <div class="sp-text">
-                                                                    <div class="sp-title"><a
-                                                                            href="/shows/hotel-inhumans"
-                                                                            data-preview-image="https://subsplease.org/wp-content/uploads/2025/07/150443.jpg"
-                                                                            class="processed">Hotel Inhumans —
-                                                                            13</a><span
-                                                                            style="margin-left: 8px; cursor: pointer; color: rgb(255, 153, 0);"
-                                                                            title="Loaded from cache (expires in 3h 52m)
-Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src="https://s.w.org/images/core/emoji/16.0.1/svg/2b50.svg">
-                                                                            63%</span></div>
-                                                                    <div class="badge-wrapper sp-badges"><a
-                                                                            href="magnet:?xt=urn:btih:ZGKKPXKHLVFDAYCA2WDDHVGLAVQHFQ5B&amp;dn=%5BSubsPlease%5D%20Hotel%20Inhumans%20-%2013%20%28480p%29%20%5B60B041C1%5D.mkv&amp;xl=382274054&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front">480p</span></a><a
-                                                                            href="magnet:?xt=urn:btih:MA5TEAYBC3JY5AINI6NVEPSCKD5AG2NI&amp;dn=%5BSubsPlease%5D%20Hotel%20Inhumans%20-%2013%20%28720p%29%20%5B3FEFE42F%5D.mkv&amp;xl=735705717&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front">720p</span></a><a
-                                                                            href="magnet:?xt=urn:btih:YMSQXL4CCGTTAJN6XXIZLMV6BH3VDKF5&amp;dn=%5BSubsPlease%5D%20Hotel%20Inhumans%20-%2013%20%281080p%29%20%5BFB6E510C%5D.mkv&amp;xl=1440420804&amp;tr=http%3A%2F%2Fnyaa.tracker.wf%3A7777%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&amp;tr=udp%3A%2F%2F9.rarbg.me%3A2710%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fexodus.desync.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Ftracker3.itzmx.com%3A6961%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&amp;tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&amp;tr=udp%3A%2F%2Fretracker.lanta-net.ru%3A2710%2Fannounce&amp;tr=http%3A%2F%2Fopen.acgnxtracker.com%3A80%2Fannounce&amp;tr=wss%3A%2F%2Ftracker.openwebtorrent.com"><span
-                                                                                class="badge badge-front">1080p</span></a><a
-                                                                            href="https://subsplease.org/xdcc/?search=%22%5BSubsPlease%5D+Hotel+Inhumans+-+13%22"><span
-                                                                                class="badge badge-front hidden-xs">XDCC</span></a>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td class="release-item-time"><span
-                                                                title="Sun, 28 Sep 2025 18:31:42 +0200">Sep 28th</span>
+                                                        <td class="release-item-time" style="position: relative;"><span
+                                                                title="Mon, 29 Sep 2025 17:02:10 +0200">Sep
+                                                                29th</span><span class="sp-favorite-star"
+                                                                title="Click to toggle favorite"
+                                                                style="cursor: pointer; user-select: none; color: rgb(102, 102, 102);">☆</span>
                                                         </td>
                                                     </tr>
                                                 </table>
@@ -1282,52 +1418,106 @@ Click to refresh"><img draggable="false" role="img" class="emoji" alt="⭐" src=
                                 role="complementary">
                                 <h2>Time</h2>
                                 <div id="current-time"><span class="wc_time" data-wc-format="MMMM Do YYYY, HH:mm:ss"
-                                        data-wc-timezone="Europe/Prague" data-wc-language="en_US">October 3rd 2025,
-                                        17:15:11</span></div>
+                                        data-wc-timezone="Europe/Prague" data-wc-language="en_US">October 4th 2025,
+                                        13:01:12</span></div>
                                 <h2>Airtime today</h2>
                                 <table id="schedule-table" cellpadding="0" border="0" cellspacing="0">
                                     <tr class="schedule-widget-item">
                                         <td class="schedule-widget-show"><a title="Go to show"
-                                                href="/shows/dragon-raja-s2"
-                                                data-preview-image="https://subsplease.org/wp-content/uploads/2025/07/147273.jpg">Dragon
-                                                Raja S2</a></td>
-                                        <td class="schedule-widget-time"><img draggable="false" role="img" class="emoji"
-                                                alt="✔" src="https://s.w.org/images/core/emoji/16.0.1/svg/2714.svg">
-                                            04:00</td>
+                                                href="/shows/boku-no-hero-academia"
+                                                data-preview-image="https://subsplease.org/wp-content/uploads/2021/03/78745.jpg">Boku
+                                                no Hero Academia</a></td>
+                                        <td class="schedule-widget-time">11:30</td>
                                     </tr>
                                     <tr class="schedule-widget-item">
-                                        <td class="schedule-widget-show"><a title="Go to show" href="/shows/mugen-gacha"
-                                                data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/151246.jpg">Mugen
-                                                Gacha</a></td>
-                                        <td class="schedule-widget-time"><img draggable="false" role="img" class="emoji"
-                                                alt="✔" src="https://s.w.org/images/core/emoji/16.0.1/svg/2714.svg">
-                                            17:00</td>
+                                        <td class="schedule-widget-show"><a title="Go to show"
+                                                href="/shows/detective-conan"
+                                                data-preview-image="https://subsplease.org/wp-content/uploads/2020/10/75199.jpg">Detective
+                                                Conan</a></td>
+                                        <td class="schedule-widget-time">13:30</td>
                                     </tr>
                                     <tr class="schedule-widget-item">
-                                        <td class="schedule-widget-show"><a title="Go to show" href="/shows/tougen-anki"
-                                                data-preview-image="https://subsplease.org/wp-content/uploads/2025/07/150666.jpg">Tougen
-                                                Anki</a></td>
+                                        <td class="schedule-widget-show"><a title="Go to show"
+                                                href="/shows/kao-ni-denai-kashiwada-san-to-kao-ni-deru-oota-kun"
+                                                data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/151886.jpg">Kao
+                                                ni Denai Kashiwada-san to Kao ni Deru Oota-kun</a></td>
+                                        <td class="schedule-widget-time">14:00</td>
+                                    </tr>
+                                    <tr class="schedule-widget-item">
+                                        <td class="schedule-widget-show"><a title="Go to show"
+                                                href="/shows/fumetsu-no-anata-e-s3"
+                                                data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/152364.jpg">Fumetsu
+                                                no Anata e S3</a></td>
+                                        <td class="schedule-widget-time">14:30</td>
+                                    </tr>
+                                    <tr class="schedule-widget-item">
+                                        <td class="schedule-widget-show"><a title="Go to show"
+                                                href="/shows/kekkon-yubiwa-monogatari"
+                                                data-preview-image="https://subsplease.org/wp-content/uploads/2024/01/139991.jpg">Kekkon
+                                                Yubiwa Monogatari</a></td>
+                                        <td class="schedule-widget-time">15:00</td>
+                                    </tr>
+                                    <tr class="schedule-widget-item">
+                                        <td class="schedule-widget-show"><a title="Go to show"
+                                                href="/shows/yasei-no-last-boss-ga-arawareta"
+                                                data-preview-image="https://subsplease.org/wp-content/uploads/2025/09/145051.jpg">Yasei
+                                                no Last Boss ga Arawareta!</a></td>
+                                        <td class="schedule-widget-time">16:00</td>
+                                    </tr>
+                                    <tr class="schedule-widget-item">
+                                        <td class="schedule-widget-show"><a title="Go to show"
+                                                href="/shows/mikata-ga-yowasugite-hojo-mahou"
+                                                data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/151636.jpg">Mikata
+                                                ga Yowasugite Hojo Mahou</a></td>
+                                        <td class="schedule-widget-time">16:30</td>
+                                    </tr>
+                                    <tr class="schedule-widget-item">
+                                        <td class="schedule-widget-show"><a title="Go to show"
+                                                href="/shows/nageki-no-bourei-wa-intai-shitai"
+                                                data-preview-image="https://subsplease.org/wp-content/uploads/2024/09/145660.jpg">Nageki
+                                                no Bourei wa Intai shitai</a></td>
+                                        <td class="schedule-widget-time">16:30</td>
+                                    </tr>
+                                    <tr class="schedule-widget-item">
+                                        <td class="schedule-widget-show"><a title="Go to show"
+                                                href="/shows/shuumatsu-touring"
+                                                data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/151599.jpg">Shuumatsu
+                                                Touring</a></td>
+                                        <td class="schedule-widget-time">16:30</td>
+                                    </tr>
+                                    <tr class="schedule-widget-item">
+                                        <td class="schedule-widget-show"><a title="Go to show"
+                                                href="/shows/spy-x-family"
+                                                data-preview-image="https://subsplease.org/wp-content/uploads/2022/04/121382.jpg">Spy
+                                                x Family</a></td>
                                         <td class="schedule-widget-time">17:30</td>
                                     </tr>
                                     <tr class="schedule-widget-item">
-                                        <td class="schedule-widget-show"><a title="Go to show" href="/shows/shabake"
-                                                data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/152179.jpg">Shabake</a>
-                                        </td>
-                                        <td class="schedule-widget-time">18:00</td>
+                                        <td class="schedule-widget-show"><a title="Go to show"
+                                                href="/shows/toujima-tanzaburou-wa-kamen-rider-ni-naritai"
+                                                data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/152139.jpg">Toujima
+                                                Tanzaburou wa Kamen Rider ni Naritai</a></td>
+                                        <td class="schedule-widget-time">17:30</td>
                                     </tr>
                                     <tr class="schedule-widget-item">
                                         <td class="schedule-widget-show"><a title="Go to show"
-                                                href="/shows/watari-kun-no-xx-ga-houkai-sunzen"
-                                                data-preview-image="https://subsplease.org/wp-content/uploads/2025/07/150545.jpg">Watari-kun
-                                                no xx ga Houkai Sunzen</a></td>
-                                        <td class="schedule-widget-time">18:15</td>
+                                                href="/shows/silent-witch-chinmoku-no-majo-no-kakushigoto"
+                                                data-preview-image="https://subsplease.org/wp-content/uploads/2025/07/149732.jpg">Silent
+                                                Witch - Chinmoku no Majo no Kakushigoto</a></td>
+                                        <td class="schedule-widget-time">18:30</td>
                                     </tr>
                                     <tr class="schedule-widget-item">
                                         <td class="schedule-widget-show"><a title="Go to show"
-                                                href="/shows/saigo-ni-hitotsu-dake-onegai-shitemo-yoroshii-deshou-ka"
-                                                data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/151754.jpg">Saigo
-                                                ni Hitotsu dake Onegai Shitemo Yoroshii Deshou ka</a></td>
-                                        <td class="schedule-widget-time">19:00</td>
+                                                href="/shows/tomodachi-no-imouto-ga-ore-ni-dake-uzai"
+                                                data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/151694.jpg">Tomodachi
+                                                no Imouto ga Ore ni dake Uzai</a></td>
+                                        <td class="schedule-widget-time">18:30</td>
+                                    </tr>
+                                    <tr class="schedule-widget-item">
+                                        <td class="schedule-widget-show"><a title="Go to show" href="/shows/kingdom-s6"
+                                                data-preview-image="https://subsplease.org/wp-content/uploads/2025/10/151476.jpg">Kingdom
+                                                S6</a></td>
+                                        <td class="schedule-widget-time">21:05</td>
                                     </tr>
                                 </table>
                                 <h2>Site news</h2>
