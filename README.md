@@ -25,6 +25,10 @@ A TamperMonkey script that adds image preview functionality to the [SubsPlease](
 
 ![Sizes](images/thumbnail_sizes.jpg)
 
+### **Airtime Favorites**
+
+![Airtime Favorites](images/airtime_favorites.jpg)
+
 ### **Settings Dialog (Change thumbnail sizes, Clean favorites)**
 
 ![Settings](images/settings.jpg)
