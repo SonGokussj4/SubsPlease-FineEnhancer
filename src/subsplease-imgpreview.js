@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SubsPlease ImgPreview
 // @namespace    https://github.com/SonGokussj4/tampermonkey-subsplease-ImgPreview
-// @version      1.2.1
+// @version      1.3.0
 // @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands. Also manage favorites with visual highlights.
 // @author       SonGokussj4
 // @license      MIT
@@ -93,6 +93,85 @@ function writeRatingCache(cache) {
   }
 }
 
+const mediaRegistry = new Map();
+const ratingFetches = new Map();
+
+function getMediaEntry(normalizedTitle) {
+  let entry = mediaRegistry.get(normalizedTitle);
+  if (!entry) {
+    entry = {
+      releaseWrappers: new Set(),
+      releaseStars: new Set(),
+      ratingSpans: new Set(),
+      scheduleRows: new Set(),
+      scheduleStars: new Set(),
+      primaryTitle: null,
+    };
+    mediaRegistry.set(normalizedTitle, entry);
+  }
+  return entry;
+}
+
+function pruneDisconnected(set) {
+  for (const node of set) {
+    if (!node.isConnected) {
+      set.delete(node);
+    }
+  }
+}
+
+function applyFavoriteVisuals(normalizedTitle, isFav) {
+  const entry = getMediaEntry(normalizedTitle);
+
+  pruneDisconnected(entry.releaseWrappers);
+  for (const wrapper of entry.releaseWrappers) {
+    wrapper.classList.toggle('sp-favorite', isFav);
+  }
+
+  pruneDisconnected(entry.releaseStars);
+  for (const star of entry.releaseStars) {
+    star.innerHTML = isFav ? '★' : '☆';
+    star.style.color = isFav ? '#ffd700' : '#666';
+    star.title = isFav ? 'Click to remove favorite' : 'Click to add favorite';
+  }
+
+  pruneDisconnected(entry.scheduleRows);
+  for (const row of entry.scheduleRows) {
+    row.classList.toggle('sp-schedule-favorite', isFav);
+  }
+
+  pruneDisconnected(entry.scheduleStars);
+  for (const star of entry.scheduleStars) {
+    star.innerHTML = isFav ? '★' : '☆';
+    star.style.color = isFav ? '#ffd700' : '#666';
+    star.title = isFav ? 'Click to remove favorite' : 'Click to add favorite';
+  }
+}
+
+function refreshFavoriteVisuals(normalizedTitle) {
+  const favorites = getFavorites();
+  const isFav = !!favorites[normalizedTitle];
+  applyFavoriteVisuals(normalizedTitle, isFav);
+  return isFav;
+}
+
+function registerReleaseElements(normalizedTitle, { wrapper, star, ratingSpan, originalTitle }) {
+  const entry = getMediaEntry(normalizedTitle);
+  if (wrapper) entry.releaseWrappers.add(wrapper);
+  if (star) entry.releaseStars.add(star);
+  if (ratingSpan) entry.ratingSpans.add(ratingSpan);
+  if (originalTitle && !entry.primaryTitle) entry.primaryTitle = originalTitle;
+  refreshFavoriteVisuals(normalizedTitle);
+}
+
+function registerScheduleElements(normalizedTitle, { row, star, originalTitle }) {
+  const entry = getMediaEntry(normalizedTitle);
+  if (row) entry.scheduleRows.add(row);
+  if (star) entry.scheduleStars.add(star);
+  if (originalTitle && !entry.primaryTitle) entry.primaryTitle = originalTitle;
+  refreshFavoriteVisuals(normalizedTitle);
+}
+
 /* ------------------------------------------------------------------
  * FAVORITES MANAGEMENT
  * ---------------------------------------------------------------- */
@@ -127,18 +206,22 @@ function isFavorite(title) {
 function toggleFavorite(title) {
   const normalizedTitle = normalizeTitle(title);
   const favorites = getFavorites();
+  let isFav;
 
   if (favorites[normalizedTitle]) {
     delete favorites[normalizedTitle];
+    isFav = false;
   } else {
     favorites[normalizedTitle] = {
       originalTitle: title,
       timestamp: Date.now(),
     };
+    isFav = true;
   }
 
   saveFavorites(favorites);
-  return !!favorites[normalizedTitle];
+  applyFavoriteVisuals(normalizedTitle, isFav);
+  return isFav;
 }
 
 /** Clear all favorites */
@@ -149,19 +232,8 @@ function clearAllFavorites() {
   }
 }
 
-/** Update visual styling for favorite shows */
-function updateFavoriteVisuals(wrapper, isFav) {
-  if (!wrapper) return;
-
-  if (isFav) {
-    wrapper.classList.add('sp-favorite');
-  } else {
-    wrapper.classList.remove('sp-favorite');
-  }
-}
-
 /** Add favorite star to the time column */
-function addFavoriteStar(cell, titleText) {
+function addFavoriteStar(cell, titleText, normalizedTitle) {
   // Find the table row and the time cell
   const row = cell.closest('tr');
   if (!row) return;
@@ -174,24 +246,22 @@ function addFavoriteStar(cell, titleText) {
   favoriteSpan.className = 'sp-favorite-star';
   favoriteSpan.style.cursor = 'pointer';
   favoriteSpan.style.userSelect = 'none';
-  favoriteSpan.innerHTML = isFavorite(titleText) ? '★' : '☆';
-  favoriteSpan.style.color = isFavorite(titleText) ? '#ffd700' : '#666';
+  favoriteSpan.innerHTML = '☆';
+  favoriteSpan.style.color = '#666';
   favoriteSpan.title = 'Click to toggle favorite';
+  favoriteSpan.dataset.title = titleText;
+  favoriteSpan.dataset.normalizedTitle = normalizedTitle;
 
   favoriteSpan.addEventListener('click', (e) => {
     e.stopPropagation();
-    const isNowFavorite = toggleFavorite(titleText);
-    favoriteSpan.innerHTML = isNowFavorite ? '★' : '☆';
-    favoriteSpan.style.color = isNowFavorite ? '#ffd700' : '#666';
-
-    // Update visual styling of parent elements - find the wrapper in the first cell
-    const wrapper = row.querySelector('.sp-img-wrapper');
-    updateFavoriteVisuals(wrapper, isNowFavorite);
+    toggleFavorite(titleText);
   });
 
   // Position the star at the top-right of the time cell
   timeCell.style.position = 'relative';
   timeCell.appendChild(favoriteSpan);
+
+  return favoriteSpan;
 }
 
 /* ------------------------------------------------------------------
@@ -280,84 +350,201 @@ async function fetchAniListRating(title, forceRefresh = false) {
  * RATING BADGE HANDLING
  * ---------------------------------------------------------------- */
 
+function getCachedRatingData(normalizedTitle) {
+  const cache = readRatingCache();
+  const entry = cache[normalizedTitle];
+  if (!entry) return null;
+  const timestamp = entry?.timestamp ?? 0;
+  const stale = Date.now() - timestamp >= CACHE_TTL_MS;
+  return {
+    score: Object.prototype.hasOwnProperty.call(entry, 'score') ? entry.score : null,
+    cached: true,
+    stale,
+    timestamp,
+    expires: timestamp + CACHE_TTL_MS,
+    failed: false,
+  };
+}
+
+function renderRatingSpan(span, data) {
+  if (!span || !span.isConnected) return;
+
+  if (data.loading) {
+    span.textContent = '…';
+    span.style.color = '#999';
+    span.title = data.message || 'Loading rating…';
+    return;
+  }
+
+  const hasScore = typeof data.score === 'number';
+
+  if (!hasScore) {
+    span.textContent = 'N/A';
+    span.style.color = '#999';
+
+    if (data.failed) {
+      span.title = 'AniList fetch failed\nClick to retry';
+    } else if (data.cached) {
+      if (data.stale) {
+        const age = Date.now() - (data.timestamp ?? Date.now());
+        span.title = `AniList rating not available (${msToTime(age)} old)\nRefreshing… Click to force refresh`;
+      } else {
+        span.title = 'AniList rating not available\nClick to refresh';
+      }
+    } else {
+      span.title = 'AniList rating not available\nClick to refresh';
+    }
+    return;
+  }
+
+  span.textContent = `⭐ ${data.score}%`;
+
+  if (!data.cached) {
+    span.style.color = data.failed ? '#cc4444' : '#00cc66';
+    span.title = data.failed ? 'AniList fetch failed\nClick to retry' : 'Fresh from AniList\nClick to refresh';
+    return;
+  }
+
+  const now = Date.now();
+  const ageMs = now - (data.timestamp ?? now);
+
+  if (data.stale) {
+    span.style.color = '#cc8800';
+    const staleDuration = msToTime(Math.max(0, ageMs - CACHE_TTL_MS));
+    span.title = data.failed
+      ? `Refresh failed — showing cached rating (expired ${staleDuration} ago)\nClick to retry`
+      : `Using cached rating (${msToTime(ageMs)} old)\nRefreshing… Click to force refresh`;
+    return;
+  }
+
+  const remaining = Math.max(0, (data.expires ?? data.timestamp + CACHE_TTL_MS) - now);
+  span.style.color = '#ff9900';
+  span.title = data.failed
+    ? `Refresh failed — showing cached (expires in ${msToTime(remaining)})\nClick to retry`
+    : `Loaded from cache (expires in ${msToTime(remaining)})\nClick to refresh`;
+}
+
+function renderRatingForTitle(normalizedTitle, data) {
+  const entry = getMediaEntry(normalizedTitle);
+  pruneDisconnected(entry.ratingSpans);
+  for (const span of entry.ratingSpans) {
+    renderRatingSpan(span, data);
+  }
+}
+
+function setRefreshingState(normalizedTitle) {
+  const entry = getMediaEntry(normalizedTitle);
+  pruneDisconnected(entry.ratingSpans);
+  for (const span of entry.ratingSpans) {
+    span.title = 'Refreshing rating…';
+  }
+}
+
+function ensureRatingForTitle(normalizedTitle, originalTitle, force = false) {
+  const cachedData = getCachedRatingData(normalizedTitle);
+
+  if (cachedData) {
+    renderRatingForTitle(normalizedTitle, cachedData);
+  } else {
+    renderRatingForTitle(normalizedTitle, { loading: true });
+  }
+
+  const shouldFetch = force || !cachedData || cachedData.stale;
+  if (!shouldFetch) {
+    return Promise.resolve(cachedData);
+  }
+
+  setRefreshingState(normalizedTitle);
+
+  if (ratingFetches.has(normalizedTitle)) {
+    return ratingFetches.get(normalizedTitle);
+  }
+
+  const entry = getMediaEntry(normalizedTitle);
+  const sourceTitle = originalTitle || entry.primaryTitle || normalizedTitle;
+
+  const fetchPromise = fetchAniListRating(sourceTitle, true)
+    .then((result) => {
+      renderRatingForTitle(normalizedTitle, result);
+      return result;
+    })
+    .catch((err) => {
+      console.error('Failed to refresh rating:', err);
+      const fallback = cachedData || {
+        score: null,
+        cached: false,
+        stale: false,
+        timestamp: Date.now(),
+        expires: Date.now() + CACHE_TTL_MS,
+        failed: true,
+      };
+      renderRatingForTitle(normalizedTitle, { ...fallback, failed: true });
+      throw err;
+    })
+    .finally(() => {
+      ratingFetches.delete(normalizedTitle);
+    });
+
+  ratingFetches.set(normalizedTitle, fetchPromise);
+  return fetchPromise;
+}
+
 /** Attach rating badge to a title */
-async function addRatingToTitle(titleDiv, titleText) {
-  // Create rating span
+function addRatingToTitle(titleDiv, titleText, normalizedTitle) {
   const ratingSpan = document.createElement('span');
   ratingSpan.style.marginLeft = '8px';
   ratingSpan.style.cursor = 'pointer';
   ratingSpan.textContent = '…';
+  ratingSpan.dataset.normalizedTitle = normalizedTitle;
   titleDiv.appendChild(ratingSpan);
-
-  function renderRating({ score, cached, stale, timestamp, expires, failed }) {
-    const hasScore = score !== null && score !== undefined;
-    ratingSpan.textContent = hasScore ? `⭐ ${score}%` : 'N/A';
-
-    if (!cached) {
-      ratingSpan.style.color = failed ? '#cc4444' : '#00cc66';
-      ratingSpan.title = failed ? 'AniList fetch failed\nClick to retry' : 'Fresh from AniList\nClick to refresh';
-      return;
-    }
-
-    const now = Date.now();
-    const ageMs = now - timestamp;
-
-    if (stale) {
-      ratingSpan.style.color = '#cc8800';
-      const staleDuration = msToTime(Math.max(0, ageMs - CACHE_TTL_MS));
-      ratingSpan.title = failed
-        ? `Refresh failed — showing cached rating (expired ${staleDuration} ago)\nClick to retry`
-        : `Using cached rating (${msToTime(ageMs)} old)\nRefreshing… Click to force refresh`;
-      return;
-    }
-
-    const remaining = Math.max(0, expires - now);
-    ratingSpan.style.color = '#ff9900';
-    ratingSpan.title = failed
-      ? `Refresh failed — showing cached (expires in ${msToTime(remaining)})\nClick to retry`
-      : `Loaded from cache (expires in ${msToTime(remaining)})\nClick to refresh`;
-  }
-
-  async function updateRating(force = false) {
-    const cache = readRatingCache();
-    const cleanTitle = normalizeTitle(titleText);
-    const cachedEntry = cache[cleanTitle];
-    const timestamp = cachedEntry?.timestamp ?? 0;
-    const isStale = cachedEntry ? Date.now() - timestamp >= CACHE_TTL_MS : false;
-
-    if (cachedEntry) {
-      renderRating({
-        score: Object.prototype.hasOwnProperty.call(cachedEntry, 'score') ? cachedEntry.score : null,
-        cached: true,
-        stale: isStale,
-        timestamp,
-        expires: timestamp + CACHE_TTL_MS,
-        failed: false,
-      });
-    } else {
-      ratingSpan.textContent = '…';
-      ratingSpan.style.color = '#999';
-      ratingSpan.title = 'Loading rating…';
-    }
-
-    const shouldFetch = force || !cachedEntry || isStale;
-    if (!shouldFetch) return;
-
-    ratingSpan.title = 'Refreshing rating…';
-    const result = await fetchAniListRating(titleText, true);
-    renderRating(result);
-  }
 
   ratingSpan.addEventListener('click', (e) => {
     e.stopPropagation();
-    updateRating(true);
+    ensureRatingForTitle(normalizedTitle, titleText, true);
   });
-  updateRating(false);
+
+  return ratingSpan;
 }
 
 /* ------------------------------------------------------------------
  * IMAGE PREVIEW + STYLES
  * ---------------------------------------------------------------- */
+
+function initScheduleFavorites() {
+  const rows = document.querySelectorAll('#schedule-table tr.schedule-widget-item:not(.sp-schedule-processed)');
+  if (!rows.length) return;
+
+  rows.forEach((row) => {
+    row.classList.add('sp-schedule-processed');
+    const showCell = row.querySelector('.schedule-widget-show');
+    const link = showCell?.querySelector('a');
+    if (!showCell || !link) return;
+
+    showCell.classList.add('sp-schedule-show');
+
+    const titleText = link.textContent.trim();
+    const normalizedTitle = normalizeTitle(titleText);
+
+    const star = document.createElement('span');
+    star.className = 'sp-schedule-favorite-star';
+    star.innerHTML = '☆';
+    star.style.cursor = 'pointer';
+    star.style.userSelect = 'none';
+    star.title = 'Click to toggle favorite';
+    star.dataset.title = titleText;
+    star.dataset.normalizedTitle = normalizedTitle;
+
+    star.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleFavorite(titleText);
+    });
+
+    showCell.appendChild(star);
+
+    registerScheduleElements(normalizedTitle, { row, star, originalTitle: titleText });
+  });
+}
 
 /** Inject styles (only once) */
 function ensureStyles() {
@@ -394,13 +581,14 @@ function ensureStyles() {
     }
     .sp-favorite {
       background: linear-gradient(90deg,
-        rgba(255, 215, 0, 0.08) 0%,
-        rgba(255, 215, 0, 0.04) 30%,
-        rgba(255, 215, 0, 0.02) 60%,
-        transparent 100%);
-      border-left: 3px solid rgba(255, 215, 0, 0.6);
-      padding-left: 8px;
+        rgba(255, 215, 0, 0.2) 0%,
+        rgba(255, 215, 0, 0.14) 35%,
+        rgba(255, 215, 0, 0.08) 70%,
+        rgba(255, 215, 0, 0.03) 100%);
+      border-left: 3px solid rgba(255, 215, 0, 0.75);
+      padding-left: 10px;
       margin-left: -3px;
+      box-shadow: 0 3px 12px rgba(255, 215, 0, 0.18);
     }
     .sp-favorite::before {
       content: '';
@@ -408,23 +596,23 @@ function ensureStyles() {
       left: 0;
       top: 0;
       bottom: 0;
-      width: 2px;
+      width: 3px;
       background: linear-gradient(to bottom,
-        rgba(255, 215, 0, 0.8) 0%,
-        rgba(255, 215, 0, 0.4) 50%,
-        rgba(255, 215, 0, 0.8) 100%);
+        rgba(255, 215, 0, 0.95) 0%,
+        rgba(255, 215, 0, 0.45) 50%,
+        rgba(255, 215, 0, 0.95) 100%);
       border-radius: 1px;
     }
     .sp-favorite .sp-thumb {
-      box-shadow: 0 2px 8px rgba(255, 215, 0, 0.25);
-      border: 1px solid rgba(255, 215, 0, 0.3);
+      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+      border: 1px solid rgba(255, 215, 0, 0.45);
     }
     .sp-favorite:hover {
       background: linear-gradient(90deg,
-        rgba(255, 215, 0, 0.12) 0%,
-        rgba(255, 215, 0, 0.06) 30%,
-        rgba(255, 215, 0, 0.03) 60%,
-        transparent 100%);
+        rgba(255, 215, 0, 0.24) 0%,
+        rgba(255, 215, 0, 0.16) 35%,
+        rgba(255, 215, 0, 0.1) 70%,
+        rgba(255, 215, 0, 0.04) 100%);
     }
     .sp-favorite-star {
       position: absolute;
@@ -444,6 +632,37 @@ function ensureStyles() {
     .release-item-time {
       position: relative;
     }
+    .sp-schedule-show {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: space-between;
+    }
+    .sp-schedule-show a {
+      flex: 1;
+    }
+    .sp-schedule-favorite {
+      background: linear-gradient(90deg,
+        rgba(255, 215, 0, 0.18) 0%,
+        rgba(255, 215, 0, 0.1) 65%,
+        rgba(255, 215, 0, 0.05) 100%);
+      border-left: 3px solid rgba(255, 215, 0, 0.7);
+    }
+    .sp-schedule-favorite .schedule-widget-show a {
+      font-weight: 600;
+    }
+    .sp-schedule-favorite-star {
+      font-size: 16px;
+      line-height: 1;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+      opacity: 0.75;
+      transition: all 0.2s ease;
+      color: #666;
+    }
+    .sp-schedule-favorite-star:hover {
+      opacity: 1;
+      transform: scale(1.15);
+    }
     `;
   const style = document.createElement('style');
   style.id = 'sp-styles';
@@ -454,6 +673,7 @@ function ensureStyles() {
 /** Attach images + ratings to release table */
 function addImages() {
   ensureStyles();
+  initScheduleFavorites();
 
   // Load thumbnail size
   const thumbSize = normalizeSize(GM_getValue('imageSize', '64px'));
@@ -485,17 +705,12 @@ function addImages() {
     titleDiv.appendChild(link);
 
     const titleText = link.textContent.trim();
-
-    // Set initial favorite styling before adding rating
-    const isCurrentlyFavorite = isFavorite(titleText);
-    if (isCurrentlyFavorite) {
-      wrapper.classList.add('sp-favorite');
-    }
+    const normalizedTitle = normalizeTitle(titleText);
 
     // Add favorite star to time column
-    addFavoriteStar(cell, titleText);
+    const star = addFavoriteStar(cell, titleText, normalizedTitle);
 
-    addRatingToTitle(titleDiv, titleText);
+    const ratingSpan = addRatingToTitle(titleDiv, titleText, normalizedTitle);
 
     const badge = cell.querySelector('.badge-wrapper');
     if (badge) {
@@ -511,6 +726,9 @@ function addImages() {
 
     cell.innerHTML = '';
     cell.appendChild(wrapper);
+
+    registerReleaseElements(normalizedTitle, { wrapper, star, ratingSpan, originalTitle: titleText });
+    ensureRatingForTitle(normalizedTitle, titleText, false);
   });
 }
 
