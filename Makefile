@@ -78,3 +78,18 @@ help-md:  ## Generate HELP.md file with the same content as `make help`
 # The format for command help is:
 #   <command>:  ## [<Group>:] <Description>
 # ==================================================================
+
+bump-version:  ## Dev: Bump version (Usage: make bump-version NEW_VERSION=x.y.z)
+	@if [ "$(NEW_VERSION)" = "$(CURRENT_VERSION)" ]; then \
+		echo "Error: NEW_VERSION must be different from CURRENT_VERSION ($(CURRENT_VERSION))"; \
+		exit 1; \
+	fi
+	@echo "Bumping version from $(CURRENT_VERSION) to $(NEW_VERSION)..."
+	@sed -i.bak "s|^// @version .*|// @version      $(NEW_VERSION)|" $(SCRIPT)
+	@rm -f $(SCRIPT).bak
+	@echo "Version bumped to $(NEW_VERSION) in $(SCRIPT)."
+
+release:  ## Dev: Upload current script to Userscript
+	@echo "Releasing version $(NEW_VERSION) to Userscripts..."
+	@curl -X POST -F "script=@$(SCRIPT)" https://userscripts.org/scripts/publish
+	@echo "Released version $(NEW_VERSION) to Userscripts."

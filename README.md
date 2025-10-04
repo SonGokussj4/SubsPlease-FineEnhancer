@@ -8,12 +8,12 @@ A TamperMonkey script that adds image preview functionality to the [SubsPlease](
 - Click to refresh ratings
 - User-configurable image sizes
 - Settings dialog for easy customization
+- Gradient overlay for better text visibility of favorite shows
 
 ## Installation
 1. Install [TamperMonkey](https://www.tampermonkey.net/) extension for your browser.
-2. Copy the script from [here](https://github.com/SonGokussj4/tampermonkey-subsplease-ImgPreview/raw/main/src/subsplease-imgpreview.js).
-3. Create a new script in TamperMonkey and paste the copied script.
-4. Save the script and refresh the SubsPlease page.
+2. Go to https://greasyfork.org/cs/scripts/551548-subsplease-fine-enhancer and click "Install this script".
+3. Enjoy enhanced browsing on SubsPlease!
 
 ## Screenshots
 
