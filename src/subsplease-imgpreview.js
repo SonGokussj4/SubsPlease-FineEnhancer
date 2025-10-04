@@ -72,6 +72,27 @@ function normalizeSize(raw) {
   return '64px';
 }
 
+function readRatingCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (e) {
+    console.error('Failed to parse rating cache, clearing it.', e);
+    localStorage.removeItem(CACHE_KEY);
+    return {};
+  }
+}
+
+function writeRatingCache(cache) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+  } catch (e) {
+    console.error('Failed to write rating cache.', e);
+  }
+}
+
 /* ------------------------------------------------------------------
  * FAVORITES MANAGEMENT
  * ---------------------------------------------------------------- */
@@ -204,42 +225,54 @@ function gmFetchAniList(query, variables) {
 /** Fetch AniList rating, with caching (6h TTL) */
 async function fetchAniListRating(title, forceRefresh = false) {
   const now = Date.now();
-  const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
+  const cache = readRatingCache();
   const cleanTitle = normalizeTitle(title);
+  const entry = cache[cleanTitle];
+  const hasEntry = !!entry;
+  const timestamp = entry?.timestamp ?? 0;
+  const age = hasEntry ? now - timestamp : Infinity;
+  const stale = hasEntry ? age >= CACHE_TTL_MS : false;
 
-  if (!forceRefresh && cache[cleanTitle] && now - cache[cleanTitle].timestamp < CACHE_TTL_MS) {
-    return { score: cache[cleanTitle].score, cached: true, expires: cache[cleanTitle].timestamp + CACHE_TTL_MS };
+  if (hasEntry && !forceRefresh) {
+    return {
+      score: Object.prototype.hasOwnProperty.call(entry, 'score') ? entry.score : null,
+      cached: true,
+      stale,
+      timestamp,
+      expires: timestamp + CACHE_TTL_MS,
+    };
   }
 
   const query = `
-          query ($search: String) {
-            Media(search: $search, type: ANIME) {
-              averageScore
+            query ($search: String) {
+              Media(search: $search, type: ANIME) {
+                averageScore
+              }
             }
-          }
-      `;
+        `;
 
   try {
     const json = await gmFetchAniList(query, { search: cleanTitle });
-    const score = json?.data?.Media?.averageScore || null;
+    const score = json?.data?.Media?.averageScore ?? null;
 
-    if (score) {
-      cache[cleanTitle] = { score, timestamp: now };
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-    }
+    const latestCache = readRatingCache();
+    latestCache[cleanTitle] = { score, timestamp: now };
+    writeRatingCache(latestCache);
 
-    return { score, cached: false, expires: now + CACHE_TTL_MS };
+    return { score, cached: false, stale: false, timestamp: now, expires: now + CACHE_TTL_MS };
   } catch (err) {
     console.error('AniList fetch failed:', err);
-    if (cache[cleanTitle]) {
+    if (hasEntry) {
       return {
-        score: cache[cleanTitle].score,
+        score: Object.prototype.hasOwnProperty.call(entry, 'score') ? entry.score : null,
         cached: true,
-        expires: cache[cleanTitle].timestamp + CACHE_TTL_MS,
+        stale,
+        timestamp,
+        expires: timestamp + CACHE_TTL_MS,
         failed: true,
       };
     }
-    return { score: null, cached: false, expires: now + CACHE_TTL_MS, failed: true };
+    return { score: null, cached: false, stale: false, timestamp: now, expires: now + CACHE_TTL_MS, failed: true };
   }
 }
 
@@ -256,27 +289,63 @@ async function addRatingToTitle(titleDiv, titleText) {
   ratingSpan.textContent = '…';
   titleDiv.appendChild(ratingSpan);
 
-  async function updateRating(force = false) {
-    const { score, cached, expires, failed } = await fetchAniListRating(titleText, force);
+  function renderRating({ score, cached, stale, timestamp, expires, failed }) {
+    const hasScore = score !== null && score !== undefined;
+    ratingSpan.textContent = hasScore ? `⭐ ${score}%` : 'N/A';
 
-    if (score) {
-      ratingSpan.textContent = `⭐ ${score}%`;
-
-      if (cached) {
-        ratingSpan.style.color = '#ff9900'; // cached → orange
-        const remaining = expires - Date.now();
-        ratingSpan.title = failed
-          ? `Refresh failed — showing cached (expires in ${msToTime(remaining)})\nClick to retry`
-          : `Loaded from cache (expires in ${msToTime(remaining)})\nClick to refresh`;
-      } else {
-        ratingSpan.style.color = '#00cc66'; // fresh → green
-        ratingSpan.title = 'Fresh from AniList\nClick to refresh';
-      }
-    } else {
-      ratingSpan.textContent = 'N/A';
-      ratingSpan.style.color = '#999';
-      ratingSpan.title = 'AniList fetch failed\nClick to retry';
+    if (!cached) {
+      ratingSpan.style.color = failed ? '#cc4444' : '#00cc66';
+      ratingSpan.title = failed ? 'AniList fetch failed\nClick to retry' : 'Fresh from AniList\nClick to refresh';
+      return;
     }
+
+    const now = Date.now();
+    const ageMs = now - timestamp;
+
+    if (stale) {
+      ratingSpan.style.color = '#cc8800';
+      const staleDuration = msToTime(Math.max(0, ageMs - CACHE_TTL_MS));
+      ratingSpan.title = failed
+        ? `Refresh failed — showing cached rating (expired ${staleDuration} ago)\nClick to retry`
+        : `Using cached rating (${msToTime(ageMs)} old)\nRefreshing… Click to force refresh`;
+      return;
+    }
+
+    const remaining = Math.max(0, expires - now);
+    ratingSpan.style.color = '#ff9900';
+    ratingSpan.title = failed
+      ? `Refresh failed — showing cached (expires in ${msToTime(remaining)})\nClick to retry`
+      : `Loaded from cache (expires in ${msToTime(remaining)})\nClick to refresh`;
+  }
+
+  async function updateRating(force = false) {
+    const cache = readRatingCache();
+    const cleanTitle = normalizeTitle(titleText);
+    const cachedEntry = cache[cleanTitle];
+    const timestamp = cachedEntry?.timestamp ?? 0;
+    const isStale = cachedEntry ? Date.now() - timestamp >= CACHE_TTL_MS : false;
+
+    if (cachedEntry) {
+      renderRating({
+        score: Object.prototype.hasOwnProperty.call(cachedEntry, 'score') ? cachedEntry.score : null,
+        cached: true,
+        stale: isStale,
+        timestamp,
+        expires: timestamp + CACHE_TTL_MS,
+        failed: false,
+      });
+    } else {
+      ratingSpan.textContent = '…';
+      ratingSpan.style.color = '#999';
+      ratingSpan.title = 'Loading rating…';
+    }
+
+    const shouldFetch = force || !cachedEntry || isStale;
+    if (!shouldFetch) return;
+
+    ratingSpan.title = 'Refreshing rating…';
+    const result = await fetchAniListRating(titleText, true);
+    renderRating(result);
   }
 
   ratingSpan.addEventListener('click', (e) => {
@@ -294,88 +363,88 @@ async function addRatingToTitle(titleDiv, titleText) {
 function ensureStyles() {
   if (document.getElementById('sp-styles')) return;
   const css = `
-  #releases-table td .sp-img-wrapper {
-    display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    padding: 6px 0;
-    transition: all 0.3s ease;
-    border-radius: 8px;
-    position: relative;
-  }
-  .sp-thumb {
-    width: var(--sp-thumb-size, 64px);
-    height: auto;
-    object-fit: cover;
-    border-radius: 6px;
-    flex-shrink: 0;
-    transition: all 0.3s ease;
-  }
-  .sp-text {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-  }
-  .sp-title {
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-  .sp-badges {
-    margin-top: 6px;
-  }
-  .sp-favorite {
-    background: linear-gradient(90deg,
-      rgba(255, 215, 0, 0.08) 0%,
-      rgba(255, 215, 0, 0.04) 30%,
-      rgba(255, 215, 0, 0.02) 60%,
-      transparent 100%);
-    border-left: 3px solid rgba(255, 215, 0, 0.6);
-    padding-left: 8px;
-    margin-left: -3px;
-  }
-  .sp-favorite::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: linear-gradient(to bottom,
-      rgba(255, 215, 0, 0.8) 0%,
-      rgba(255, 215, 0, 0.4) 50%,
-      rgba(255, 215, 0, 0.8) 100%);
-    border-radius: 1px;
-  }
-  .sp-favorite .sp-thumb {
-    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.25);
-    border: 1px solid rgba(255, 215, 0, 0.3);
-  }
-  .sp-favorite:hover {
-    background: linear-gradient(90deg,
-      rgba(255, 215, 0, 0.12) 0%,
-      rgba(255, 215, 0, 0.06) 30%,
-      rgba(255, 215, 0, 0.03) 60%,
-      transparent 100%);
-  }
-  .sp-favorite-star {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    font-size: 16px;
-    z-index: 10;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    transition: all 0.2s ease;
-    opacity: 0.7;
-    line-height: 1;
-  }
-  .sp-favorite-star:hover {
-    opacity: 1;
-    transform: scale(1.15);
-  }
-  .release-item-time {
-    position: relative;
-  }
-  `;
+    #releases-table td .sp-img-wrapper {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 6px 0;
+      transition: all 0.3s ease;
+      border-radius: 8px;
+      position: relative;
+    }
+    .sp-thumb {
+      width: var(--sp-thumb-size, 64px);
+      height: auto;
+      object-fit: cover;
+      border-radius: 6px;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+    .sp-text {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+    .sp-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .sp-badges {
+      margin-top: 6px;
+    }
+    .sp-favorite {
+      background: linear-gradient(90deg,
+        rgba(255, 215, 0, 0.08) 0%,
+        rgba(255, 215, 0, 0.04) 30%,
+        rgba(255, 215, 0, 0.02) 60%,
+        transparent 100%);
+      border-left: 3px solid rgba(255, 215, 0, 0.6);
+      padding-left: 8px;
+      margin-left: -3px;
+    }
+    .sp-favorite::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom,
+        rgba(255, 215, 0, 0.8) 0%,
+        rgba(255, 215, 0, 0.4) 50%,
+        rgba(255, 215, 0, 0.8) 100%);
+      border-radius: 1px;
+    }
+    .sp-favorite .sp-thumb {
+      box-shadow: 0 2px 8px rgba(255, 215, 0, 0.25);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+    }
+    .sp-favorite:hover {
+      background: linear-gradient(90deg,
+        rgba(255, 215, 0, 0.12) 0%,
+        rgba(255, 215, 0, 0.06) 30%,
+        rgba(255, 215, 0, 0.03) 60%,
+        transparent 100%);
+    }
+    .sp-favorite-star {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      font-size: 16px;
+      z-index: 10;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      transition: all 0.2s ease;
+      opacity: 0.7;
+      line-height: 1;
+    }
+    .sp-favorite-star:hover {
+      opacity: 1;
+      transform: scale(1.15);
+    }
+    .release-item-time {
+      position: relative;
+    }
+    `;
   const style = document.createElement('style');
   style.id = 'sp-styles';
   style.textContent = css;
