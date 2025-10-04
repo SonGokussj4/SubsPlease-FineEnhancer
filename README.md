@@ -15,5 +15,16 @@ A TamperMonkey script that adds image preview functionality to the [SubsPlease](
 3. Create a new script in TamperMonkey and paste the copied script.
 4. Save the script and refresh the SubsPlease page.
 
-## Preview
-![Preview](images/preview01.JPG)
+## Screenshots
+
+### **Main Page (Add thumbnails, Ratings (+ cached), Favorites)**
+
+![Preview](images/main_page.jpg)
+
+### **Thumbnail Sizes (User-configurable: 64px, 128px, 225px)**
+
+![Sizes](images/thumbnail_sizes.jpg)
+
+### **Settings Dialog (Change thumbnail sizes, Clean favorites)**
+
+![Settings](images/settings.jpg)
