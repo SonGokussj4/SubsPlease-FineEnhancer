@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SubsPlease Fine Enhancer
 // @namespace    https://github.com/SonGokussj4/tampermonkey-subsplease-FineEnhancer
-// @version      1.3.2
+// @version      1.3.3
 // @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands. Also manage favorites with visual highlights.
 // @author       SonGokussj4
 // @license      MIT
@@ -42,12 +42,13 @@ function debounce(func, wait) {
 /** Normalize anime title:
  * - Remove episode markers like "— 01" / "- 03"
  * - Remove episode ranges like "— 01-24"
+ * - Remove version markers like "— 01v2"
  * - Remove "(Batch)" or other bracketed notes at the end
  */
 function normalizeTitle(raw) {
   const normalized = raw
     .replace(/\s*\(Batch\)$/i, '') // remove "(Batch)" suffix
-    .replace(/\s*[–—-]\s*\d+(\s*-\s*\d+)?$/, '') // remove trailing ep/range markers
+    .replace(/\s*[–—-]\s*\d+(?:[vV]\d+)?(?:\s*-\s*\d+(?:[vV]\d+)?)?$/i, '')
     .trim();
   console.debug(`normalizeTitle: ${raw} --> ${normalized}`);
   return normalized;
