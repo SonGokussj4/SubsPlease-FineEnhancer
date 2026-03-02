@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SubsPlease Fine Enhancer
 // @namespace    https://github.com/SonGokussj4/tampermonkey-subsplease-FineEnhancer
-// @version      1.4.0
+// @version      1.4.1
 // @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands. Also manage favorites with visual highlights. Favorites and color-coded ratings on the /shows/ listing.
 // @author       SonGokussj4
 // @license      MIT
@@ -23,6 +23,7 @@ const CACHE_KEY = 'ratingCache';
 const FAVORITES_KEY = 'spFavorites';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 const SHOWS_LINK_SELECTOR = 'a[href^="/shows/"][title]:not(.sp-shows-processed)';
+const SHOWS_HEADING_SELECTOR = 'h3';
 
 // Menu commands for quick settings
 GM_registerMenuCommand('Settings', showSettingsDialog);
@@ -715,9 +716,37 @@ function ensureStyles() {
       transform: scale(1.15);
     }
     .sp-shows-rating {
-      font-size: 11px;
+      font-size: 15px;
+      font-weight: 600;
       cursor: pointer;
-      opacity: 0.9;
+      opacity: 1;
+      line-height: 1;
+    }
+    .sp-shows-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 0 0 12px;
+      padding: 8px;
+      border-radius: 8px;
+      background: linear-gradient(90deg, rgba(255, 215, 0, 0.08) 0%, rgba(255, 215, 0, 0.02) 100%);
+      border: 1px solid rgba(255, 215, 0, 0.25);
+    }
+    .sp-shows-fetch-btn {
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      color: #f0d27a;
+      background: rgba(255, 215, 0, 0.1);
+      border: 1px solid rgba(255, 215, 0, 0.45);
+      border-radius: 999px;
+      padding: 3px 10px;
+      line-height: 1.3;
+      transition: all 0.15s ease;
+    }
+    .sp-shows-fetch-btn:hover {
+      background: rgba(255, 215, 0, 0.2);
+      transform: translateY(-1px);
     }
     .sp-shows-favorite {
       background: rgba(255, 215, 0, 0.12);
@@ -739,19 +768,75 @@ function ensureStyles() {
  * ---------------------------------------------------------------- */
 
 const _showsQueue = [];
+const _showsQueued = new Set();
 let _showsQueueRunning = false;
+
+function queueShowsRatingFetch(normalizedTitle, originalTitle, force = false) {
+  if (!force && _showsQueued.has(normalizedTitle)) return;
+  _showsQueued.add(normalizedTitle);
+  _showsQueue.push([normalizedTitle, originalTitle, force]);
+}
 
 async function _runShowsQueue() {
   if (_showsQueueRunning) return;
   _showsQueueRunning = true;
   while (_showsQueue.length > 0) {
-    const [normalizedTitle, originalTitle] = _showsQueue.shift();
-    await ensureRatingForTitle(normalizedTitle, originalTitle, false).catch(() => {});
+    const [normalizedTitle, originalTitle, force] = _showsQueue.shift();
+    await ensureRatingForTitle(normalizedTitle, originalTitle, !!force).catch(() => {});
+    _showsQueued.delete(normalizedTitle);
     if (_showsQueue.length > 0) {
       await new Promise((r) => setTimeout(r, 700)); // ~85 req/min
     }
   }
   _showsQueueRunning = false;
+}
+
+function getShowsSectionKey(link) {
+  let node = link.previousElementSibling;
+  while (node && node.matches && !node.matches('h3')) {
+    node = node.previousElementSibling;
+  }
+  return node ? node.textContent.trim() : '#';
+}
+
+function buildShowsToolbar(container, links) {
+  if (container.querySelector('.sp-shows-toolbar')) return;
+
+  const toolbar = document.createElement('div');
+  toolbar.className = 'sp-shows-toolbar';
+
+  const addButton = (label, onClick) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'sp-shows-fetch-btn';
+    btn.textContent = label;
+    btn.addEventListener('click', onClick);
+    toolbar.appendChild(btn);
+  };
+
+  const enqueueByFilter = (predicate) => {
+    links.forEach((link) => {
+      const titleText = link.getAttribute('title') || link.textContent.trim();
+      const normalizedTitle = normalizeTitle(titleText);
+      const cachedData = getCachedRatingData(normalizedTitle);
+      if (cachedData && !cachedData.stale) return;
+      if (!predicate(link, normalizedTitle)) return;
+      queueShowsRatingFetch(normalizedTitle, titleText, true);
+    });
+    _runShowsQueue();
+  };
+
+  addButton('Fetch all ratings', () => enqueueByFilter(() => true));
+
+  const headings = [...container.querySelectorAll(SHOWS_HEADING_SELECTOR)]
+    .map((h) => h.textContent.trim())
+    .filter((v, i, arr) => v && arr.indexOf(v) === i);
+
+  headings.forEach((section) => {
+    addButton(section, () => enqueueByFilter((link) => (link.dataset.spSectionKey || '') === section));
+  });
+
+  container.insertBefore(toolbar, container.firstChild);
 }
 
 /** Add favorites and ratings to the /shows/ listing */
@@ -763,11 +848,14 @@ function initShowsPage() {
   const links = container.querySelectorAll(SHOWS_LINK_SELECTOR);
   if (!links.length) return;
 
+  buildShowsToolbar(container, links);
+
   links.forEach((link) => {
     link.classList.add('sp-shows-processed');
 
     const titleText = link.getAttribute('title') || link.textContent.trim();
     const normalizedTitle = normalizeTitle(titleText);
+    link.dataset.spSectionKey = getShowsSectionKey(link);
 
     // Wrap the link so we can append star + rating inline
     const wrapper = document.createElement('span');
@@ -791,12 +879,13 @@ function initShowsPage() {
     // Rating badge
     const ratingSpan = document.createElement('span');
     ratingSpan.className = 'sp-shows-rating';
-    ratingSpan.textContent = '…';
+    ratingSpan.textContent = 'N/A';
     ratingSpan.style.color = '#999';
     ratingSpan.dataset.normalizedTitle = normalizedTitle;
     ratingSpan.addEventListener('click', (e) => {
       e.stopPropagation();
-      ensureRatingForTitle(normalizedTitle, titleText, true);
+      queueShowsRatingFetch(normalizedTitle, titleText, true);
+      _runShowsQueue();
     });
 
     wrapper.appendChild(star);
@@ -804,12 +893,12 @@ function initShowsPage() {
 
     registerShowsElements(normalizedTitle, { wrapper, star, ratingSpan, originalTitle: titleText });
 
-    // Render from cache immediately; queue an API fetch only if needed
+    // Render from cache immediately; auto-fetch only for favorites
     const cachedData = getCachedRatingData(normalizedTitle);
     if (cachedData && !cachedData.stale) {
       renderRatingForTitle(normalizedTitle, cachedData);
-    } else {
-      _showsQueue.push([normalizedTitle, titleText]);
+    } else if (isFavorite(titleText)) {
+      queueShowsRatingFetch(normalizedTitle, titleText, false);
     }
   });
 
