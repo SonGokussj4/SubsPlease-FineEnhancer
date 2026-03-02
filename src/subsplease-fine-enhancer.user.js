@@ -22,6 +22,7 @@ const DEBOUNCE_TIMER = 300; // ms
 const CACHE_KEY = 'ratingCache';
 const FAVORITES_KEY = 'spFavorites';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+const SHOWS_ANY_LINK_SELECTOR = 'a[href^="/shows/"][title]';
 const SHOWS_LINK_SELECTOR = 'a[href^="/shows/"][title]:not(.sp-shows-processed)';
 const SHOWS_HEADING_SELECTOR = 'h3';
 
@@ -791,12 +792,17 @@ async function _runShowsQueue() {
   _showsQueueRunning = false;
 }
 
-function getShowsSectionKey(link) {
-  let node = link.previousElementSibling;
-  while (node && node.matches && !node.matches(SHOWS_HEADING_SELECTOR)) {
-    node = node.previousElementSibling;
-  }
-  return node ? node.textContent.trim() : '#';
+function assignShowsSectionKeys(container) {
+  let currentSection = '#';
+  // querySelectorAll returns nodes in document order, which lets us map each link to the latest heading.
+  const nodes = container.querySelectorAll(`${SHOWS_HEADING_SELECTOR}, ${SHOWS_ANY_LINK_SELECTOR}`);
+  nodes.forEach((node) => {
+    if (node.matches(SHOWS_HEADING_SELECTOR)) {
+      currentSection = node.textContent.trim() || '#';
+      return;
+    }
+    node.dataset.spSectionKey = currentSection;
+  });
 }
 
 function buildShowsToolbar(container, links) {
@@ -816,11 +822,11 @@ function buildShowsToolbar(container, links) {
 
   const enqueueByFilter = (predicate) => {
     links.forEach((link) => {
+      if (!predicate(link)) return;
       const titleText = link.getAttribute('title') || link.textContent.trim();
       const normalizedTitle = normalizeTitle(titleText);
       const cachedData = getCachedRatingData(normalizedTitle);
       if (cachedData && !cachedData.stale) return;
-      if (!predicate(link, normalizedTitle)) return;
       queueShowsRatingFetch(normalizedTitle, titleText, true);
     });
     _runShowsQueue();
@@ -850,9 +856,7 @@ function initShowsPage() {
   const links = container.querySelectorAll(SHOWS_LINK_SELECTOR);
   if (!links.length) return;
 
-  links.forEach((link) => {
-    link.dataset.spSectionKey = getShowsSectionKey(link);
-  });
+  assignShowsSectionKeys(container);
 
   buildShowsToolbar(container, links);
 
