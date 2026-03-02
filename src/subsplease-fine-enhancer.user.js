@@ -5,8 +5,7 @@
 // @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands. Also manage favorites with visual highlights. Favorites and color-coded ratings on the /shows/ listing.
 // @author       SonGokussj4
 // @license      MIT
-// @match        https://subsplease.org/
-// @match        https://subsplease.org/shows/
+// @match        https://subsplease.org/*
 // @grant        GM_xmlhttpRequest
 // @connect      graphql.anilist.co
 // @grant        GM_addStyle
@@ -78,9 +77,9 @@ function normalizeSize(raw) {
 /** Return a color for a given AniList score (0–100) */
 function getRatingColor(score) {
   if (typeof score !== 'number') return '#999';
-  if (score <= 40) return '#888888';
-  if (score <= 60) return '#cc4444';
-  if (score <= 80) return '#cc8800';
+  if (score <= 39) return '#888888';
+  if (score <= 49) return '#cc4444';
+  if (score <= 74) return '#cc8800';
   return '#00cc66';
 }
 
