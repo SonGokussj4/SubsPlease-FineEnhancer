@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         SubsPlease Fine Enhancer
 // @namespace    https://github.com/SonGokussj4/tampermonkey-subsplease-FineEnhancer
-// @version      1.3.3
-// @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands. Also manage favorites with visual highlights.
+// @version      1.4.0
+// @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands. Also manage favorites with visual highlights. Favorites and color-coded ratings on the /shows/ listing.
 // @author       SonGokussj4
 // @license      MIT
 // @match        https://subsplease.org/
+// @match        https://subsplease.org/shows/
 // @grant        GM_xmlhttpRequest
 // @connect      graphql.anilist.co
 // @grant        GM_addStyle
@@ -22,6 +23,7 @@ const DEBOUNCE_TIMER = 300; // ms
 const CACHE_KEY = 'ratingCache';
 const FAVORITES_KEY = 'spFavorites';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+const SHOWS_LINK_SELECTOR = 'a[href^="/shows/"][title]:not(.sp-shows-processed)';
 
 // Menu commands for quick settings
 GM_registerMenuCommand('Settings', showSettingsDialog);
@@ -73,6 +75,15 @@ function normalizeSize(raw) {
   return '64px';
 }
 
+/** Return a color for a given AniList score (0–100) */
+function getRatingColor(score) {
+  if (typeof score !== 'number') return '#999';
+  if (score <= 40) return '#888888';
+  if (score <= 60) return '#cc4444';
+  if (score <= 80) return '#cc8800';
+  return '#00cc66';
+}
+
 function readRatingCache() {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
@@ -106,6 +117,8 @@ function getMediaEntry(normalizedTitle) {
       ratingSpans: new Set(),
       scheduleRows: new Set(),
       scheduleStars: new Set(),
+      showsWrappers: new Set(),
+      showsStars: new Set(),
       primaryTitle: null,
     };
     mediaRegistry.set(normalizedTitle, entry);
@@ -147,6 +160,18 @@ function applyFavoriteVisuals(normalizedTitle, isFav) {
     star.style.color = isFav ? '#ffd700' : '#666';
     star.title = isFav ? 'Click to remove favorite' : 'Click to add favorite';
   }
+
+  pruneDisconnected(entry.showsWrappers);
+  for (const wrapper of entry.showsWrappers) {
+    wrapper.classList.toggle('sp-shows-favorite', isFav);
+  }
+
+  pruneDisconnected(entry.showsStars);
+  for (const star of entry.showsStars) {
+    star.innerHTML = isFav ? '★' : '☆';
+    star.style.color = isFav ? '#ffd700' : '#666';
+    star.title = isFav ? 'Click to remove favorite' : 'Click to add favorite';
+  }
 }
 
 function refreshFavoriteVisuals(normalizedTitle) {
@@ -169,6 +194,15 @@ function registerScheduleElements(normalizedTitle, { row, star, originalTitle })
   const entry = getMediaEntry(normalizedTitle);
   if (row) entry.scheduleRows.add(row);
   if (star) entry.scheduleStars.add(star);
+  if (originalTitle && !entry.primaryTitle) entry.primaryTitle = originalTitle;
+  refreshFavoriteVisuals(normalizedTitle);
+}
+
+function registerShowsElements(normalizedTitle, { wrapper, star, ratingSpan, originalTitle }) {
+  const entry = getMediaEntry(normalizedTitle);
+  if (wrapper) entry.showsWrappers.add(wrapper);
+  if (star) entry.showsStars.add(star);
+  if (ratingSpan) entry.ratingSpans.add(ratingSpan);
   if (originalTitle && !entry.primaryTitle) entry.primaryTitle = originalTitle;
   refreshFavoriteVisuals(normalizedTitle);
 }
@@ -398,10 +432,10 @@ function renderRatingSpan(span, data) {
     return;
   }
 
-  span.textContent = `⭐ ${data.score}%`;
+  span.textContent = `${data.score}%`;
+  span.style.color = getRatingColor(data.score);
 
   if (!data.cached) {
-    span.style.color = data.failed ? '#cc4444' : '#00cc66';
     span.title = data.failed ? 'AniList fetch failed\nClick to retry' : 'Fresh from AniList\nClick to refresh';
     return;
   }
@@ -410,7 +444,6 @@ function renderRatingSpan(span, data) {
   const ageMs = now - (data.timestamp ?? now);
 
   if (data.stale) {
-    span.style.color = '#cc8800';
     const staleDuration = msToTime(Math.max(0, ageMs - CACHE_TTL_MS));
     span.title = data.failed
       ? `Refresh failed — showing cached rating (expired ${staleDuration} ago)\nClick to retry`
@@ -419,7 +452,6 @@ function renderRatingSpan(span, data) {
   }
 
   const remaining = Math.max(0, (data.expires ?? data.timestamp + CACHE_TTL_MS) - now);
-  span.style.color = '#ff9900';
   span.title = data.failed
     ? `Refresh failed — showing cached (expires in ${msToTime(remaining)})\nClick to retry`
     : `Loaded from cache (expires in ${msToTime(remaining)})\nClick to refresh`;
@@ -664,11 +696,125 @@ function ensureStyles() {
       opacity: 1;
       transform: scale(1.15);
     }
+    .sp-shows-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .sp-shows-star {
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      opacity: 0.7;
+      user-select: none;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+      transition: all 0.2s ease;
+      color: #666;
+    }
+    .sp-shows-star:hover {
+      opacity: 1;
+      transform: scale(1.15);
+    }
+    .sp-shows-rating {
+      font-size: 11px;
+      cursor: pointer;
+      opacity: 0.9;
+    }
+    .sp-shows-favorite {
+      background: rgba(255, 215, 0, 0.12);
+      border-radius: 3px;
+      padding: 1px 3px;
+    }
+    .sp-shows-favorite a {
+      font-weight: 600;
+    }
     `;
   const style = document.createElement('style');
   style.id = 'sp-styles';
   style.textContent = css;
   document.head.appendChild(style);
+}
+
+/* ------------------------------------------------------------------
+ * SHOWS PAGE (/shows/)
+ * ---------------------------------------------------------------- */
+
+const _showsQueue = [];
+let _showsQueueRunning = false;
+
+async function _runShowsQueue() {
+  if (_showsQueueRunning) return;
+  _showsQueueRunning = true;
+  while (_showsQueue.length > 0) {
+    const [normalizedTitle, originalTitle] = _showsQueue.shift();
+    await ensureRatingForTitle(normalizedTitle, originalTitle, false).catch(() => {});
+    if (_showsQueue.length > 0) {
+      await new Promise((r) => setTimeout(r, 700)); // ~85 req/min
+    }
+  }
+  _showsQueueRunning = false;
+}
+
+/** Add favorites and ratings to the /shows/ listing */
+function initShowsPage() {
+  ensureStyles();
+  const container = document.querySelector('.all-shows');
+  if (!container) return;
+
+  const links = container.querySelectorAll(SHOWS_LINK_SELECTOR);
+  if (!links.length) return;
+
+  links.forEach((link) => {
+    link.classList.add('sp-shows-processed');
+
+    const titleText = link.getAttribute('title') || link.textContent.trim();
+    const normalizedTitle = normalizeTitle(titleText);
+
+    // Wrap the link so we can append star + rating inline
+    const wrapper = document.createElement('span');
+    wrapper.className = 'sp-shows-item';
+    link.parentNode.insertBefore(wrapper, link);
+    wrapper.appendChild(link);
+
+    // Favorite star
+    const star = document.createElement('span');
+    star.className = 'sp-shows-star';
+    star.innerHTML = '☆';
+    star.style.color = '#666';
+    star.title = 'Click to toggle favorite';
+    star.dataset.normalizedTitle = normalizedTitle;
+    star.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleFavorite(titleText);
+    });
+
+    // Rating badge
+    const ratingSpan = document.createElement('span');
+    ratingSpan.className = 'sp-shows-rating';
+    ratingSpan.textContent = '…';
+    ratingSpan.style.color = '#999';
+    ratingSpan.dataset.normalizedTitle = normalizedTitle;
+    ratingSpan.addEventListener('click', (e) => {
+      e.stopPropagation();
+      ensureRatingForTitle(normalizedTitle, titleText, true);
+    });
+
+    wrapper.appendChild(star);
+    wrapper.appendChild(ratingSpan);
+
+    registerShowsElements(normalizedTitle, { wrapper, star, ratingSpan, originalTitle: titleText });
+
+    // Render from cache immediately; queue an API fetch only if needed
+    const cachedData = getCachedRatingData(normalizedTitle);
+    if (cachedData && !cachedData.stale) {
+      renderRatingForTitle(normalizedTitle, cachedData);
+    } else {
+      _showsQueue.push([normalizedTitle, titleText]);
+    }
+  });
+
+  _runShowsQueue();
 }
 
 /** Attach images + ratings to release table */
@@ -884,20 +1030,47 @@ function showSettingsDialog() {
 (function () {
   'use strict';
 
-  const debouncedAddImages = debounce(addImages, DEBOUNCE_TIMER);
+  const isShowsPage = location.pathname === '/shows/';
 
-  const observer = new MutationObserver((mutationsList) => {
-    for (const mutation of mutationsList) {
-      if (mutation.type === 'childList') {
-        for (const node of mutation.addedNodes) {
-          if (node.nodeType === Node.ELEMENT_NODE && node.querySelector('a[data-preview-image]:not(.processed)')) {
-            debouncedAddImages();
-            return;
+  if (isShowsPage) {
+    const debouncedInitShows = debounce(initShowsPage, DEBOUNCE_TIMER);
+
+    const observer = new MutationObserver((mutationsList) => {
+      for (const mutation of mutationsList) {
+        if (mutation.type === 'childList') {
+          for (const node of mutation.addedNodes) {
+            if (node.nodeType === Node.ELEMENT_NODE && node.querySelector?.(SHOWS_LINK_SELECTOR)) {
+              debouncedInitShows();
+              return;
+            }
           }
         }
       }
-    }
-  });
+    });
 
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+
+    if (document.readyState !== 'loading') {
+      initShowsPage();
+    } else {
+      document.addEventListener('DOMContentLoaded', initShowsPage);
+    }
+  } else {
+    const debouncedAddImages = debounce(addImages, DEBOUNCE_TIMER);
+
+    const observer = new MutationObserver((mutationsList) => {
+      for (const mutation of mutationsList) {
+        if (mutation.type === 'childList') {
+          for (const node of mutation.addedNodes) {
+            if (node.nodeType === Node.ELEMENT_NODE && node.querySelector('a[data-preview-image]:not(.processed)')) {
+              debouncedAddImages();
+              return;
+            }
+          }
+        }
+      }
+    });
+
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+  }
 })();
