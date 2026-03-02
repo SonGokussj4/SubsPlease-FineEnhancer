@@ -32,3 +32,20 @@ A TamperMonkey script that adds image preview functionality to the [SubsPlease](
 ### **Settings Dialog (Change thumbnail sizes, Clean favorites)**
 
 ![Settings](images/settings.jpg)
+
+## DEVELOPMENT
+
+```js
+// ==UserScript==
+// @name         [DEV] SubsPlease Fine Enhancer
+// @match        https://subsplease.org/*
+// @require      file://C:\PATH\TO\YOUR\REPO\src\subsplease-fine-enhancer.user.js
+// @grant        GM_xmlhttpRequest
+// @grant        GM_addStyle
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_registerMenuCommand
+// @connect      graphql.anilist.co
+// @run-at       document-start
+// ==/UserScript==
+```
