@@ -793,7 +793,7 @@ async function _runShowsQueue() {
 
 function getShowsSectionKey(link) {
   let node = link.previousElementSibling;
-  while (node && node.matches && !node.matches('h3')) {
+  while (node && node.matches && !node.matches(SHOWS_HEADING_SELECTOR)) {
     node = node.previousElementSibling;
   }
   return node ? node.textContent.trim() : '#';
@@ -828,9 +828,11 @@ function buildShowsToolbar(container, links) {
 
   addButton('Fetch all ratings', () => enqueueByFilter(() => true));
 
-  const headings = [...container.querySelectorAll(SHOWS_HEADING_SELECTOR)]
-    .map((h) => h.textContent.trim())
-    .filter((v, i, arr) => v && arr.indexOf(v) === i);
+  const headings = [...new Set(
+    [...container.querySelectorAll(`:scope > ${SHOWS_HEADING_SELECTOR}`)]
+      .map((h) => h.textContent.trim())
+      .filter((v) => v),
+  )];
 
   headings.forEach((section) => {
     addButton(section, () => enqueueByFilter((link) => (link.dataset.spSectionKey || '') === section));
@@ -848,6 +850,10 @@ function initShowsPage() {
   const links = container.querySelectorAll(SHOWS_LINK_SELECTOR);
   if (!links.length) return;
 
+  links.forEach((link) => {
+    link.dataset.spSectionKey = getShowsSectionKey(link);
+  });
+
   buildShowsToolbar(container, links);
 
   links.forEach((link) => {
@@ -855,7 +861,6 @@ function initShowsPage() {
 
     const titleText = link.getAttribute('title') || link.textContent.trim();
     const normalizedTitle = normalizeTitle(titleText);
-    link.dataset.spSectionKey = getShowsSectionKey(link);
 
     // Wrap the link so we can append star + rating inline
     const wrapper = document.createElement('span');
