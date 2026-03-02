@@ -769,26 +769,35 @@ function ensureStyles() {
  * ---------------------------------------------------------------- */
 
 const _showsQueue = [];
-const _showsQueued = new Set();
+const _showsQueued = new Map();
+let _showsQueueIndex = 0;
 let _showsQueueRunning = false;
 
 function queueShowsRatingFetch(normalizedTitle, originalTitle, force = false) {
-  if (!force && _showsQueued.has(normalizedTitle)) return;
-  _showsQueued.add(normalizedTitle);
-  _showsQueue.push([normalizedTitle, originalTitle, force]);
+  const existing = _showsQueued.get(normalizedTitle);
+  if (existing) {
+    if (force) existing[2] = true;
+    return;
+  }
+  const entry = [normalizedTitle, originalTitle, !!force];
+  _showsQueued.set(normalizedTitle, entry);
+  _showsQueue.push(entry);
 }
 
 async function _runShowsQueue() {
   if (_showsQueueRunning) return;
   _showsQueueRunning = true;
-  while (_showsQueue.length > 0) {
-    const [normalizedTitle, originalTitle, force] = _showsQueue.shift();
+  while (_showsQueueIndex < _showsQueue.length) {
+    const [normalizedTitle, originalTitle, force] = _showsQueue[_showsQueueIndex++];
     await ensureRatingForTitle(normalizedTitle, originalTitle, !!force).catch(() => {});
     _showsQueued.delete(normalizedTitle);
-    if (_showsQueue.length > 0) {
+    if (_showsQueueIndex < _showsQueue.length) {
       await new Promise((r) => setTimeout(r, 700)); // ~85 req/min
     }
   }
+  _showsQueue.length = 0;
+  _showsQueueIndex = 0;
+  _showsQueued.clear();
   _showsQueueRunning = false;
 }
 
@@ -805,7 +814,7 @@ function assignShowsSectionKeys(container) {
   });
 }
 
-function buildShowsToolbar(container, links) {
+function buildShowsToolbar(container) {
   if (container.querySelector('.sp-shows-toolbar')) return;
 
   const toolbar = document.createElement('div');
@@ -821,6 +830,7 @@ function buildShowsToolbar(container, links) {
   };
 
   const enqueueByFilter = (predicate) => {
+    const links = container.querySelectorAll(SHOWS_ANY_LINK_SELECTOR);
     links.forEach((link) => {
       if (!predicate(link)) return;
       const titleText = link.getAttribute('title') || link.textContent.trim();
@@ -858,7 +868,7 @@ function initShowsPage() {
 
   assignShowsSectionKeys(container);
 
-  buildShowsToolbar(container, links);
+  buildShowsToolbar(container);
 
   links.forEach((link) => {
     link.classList.add('sp-shows-processed');

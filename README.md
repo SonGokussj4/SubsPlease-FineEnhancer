@@ -39,7 +39,7 @@ A TamperMonkey script that adds image preview functionality to the [SubsPlease](
 // ==UserScript==
 // @name         [DEV] SubsPlease Fine Enhancer
 // @match        https://subsplease.org/*
-// @require      file://C:\PATH\TO\YOUR\REPO\src\subsplease-fine-enhancer.user.js
+// @require      file:///C:/PATH/TO/YOUR/REPO/src/subsplease-fine-enhancer.user.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
 // @grant        GM_setValue
