@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SubsPlease Fine Enhancer
 // @namespace    https://github.com/SonGokussj4/tampermonkey-subsplease-FineEnhancer
-// @version      1.4.1
+// @version      1.5.0
 // @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands. Also manage favorites with visual highlights. Favorites and color-coded ratings on the /shows/ listing.
 // @author       SonGokussj4
 // @license      MIT
@@ -52,6 +52,11 @@ function normalizeTitle(raw) {
   const normalized = raw
     .replace(/\s*\(Batch\)$/i, '') // remove "(Batch)" suffix
     .replace(/\s*[–—-]\s*\d+(?:[vV]\d+)?(?:\s*-\s*\d+(?:[vV]\d+)?)?$/i, '')
+    .replace(/\s+S(\d+)$/i, (_, n) => {
+      const i = parseInt(n, 10);
+      const sfx = [, 'st', 'nd', 'rd'][i] ?? 'th';
+      return ` ${i}${sfx} Season`;
+    })
     .trim();
   console.debug(`normalizeTitle: ${raw} --> ${normalized}`);
   return normalized;
@@ -419,16 +424,12 @@ function renderRatingSpan(span, data) {
     span.style.color = '#999';
 
     if (data.failed) {
-      span.title = 'AniList fetch failed\nClick to retry';
-    } else if (data.cached) {
-      if (data.stale) {
-        const age = Date.now() - (data.timestamp ?? Date.now());
-        span.title = `AniList rating not available (${msToTime(age)} old)\nRefreshing… Click to force refresh`;
-      } else {
-        span.title = 'AniList rating not available\nClick to refresh';
-      }
+      span.title = 'Connection error — click to retry';
+    } else if (data.cached && data.stale) {
+      const age = Date.now() - (data.timestamp ?? Date.now());
+      span.title = `Not found on AniList (${msToTime(age)} old)\nRefreshing… Click to force refresh`;
     } else {
-      span.title = 'AniList rating not available\nClick to refresh';
+      span.title = 'Not found on AniList — click to retry';
     }
     return;
   }
