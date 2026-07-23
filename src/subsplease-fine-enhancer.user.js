@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SubsPlease Fine Enhancer
 // @namespace    https://github.com/SonGokussj4/tampermonkey-subsplease-FineEnhancer
-// @version      1.6.0
+// @version      1.6.1
 // @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands. Manage favorites with visual highlights, filter/search on /shows/, and sync favorites + settings across devices via a private GitHub Gist.
 // @author       SonGokussj4
 // @license      MIT
@@ -90,12 +90,26 @@ function normalizeSize(raw) {
   return '64px';
 }
 
+/** User-configurable score thresholds: ≤gray → gray, ≤red → red,
+ * ≤orange → orange, above → green */
+const DEFAULT_RATING_THRESHOLDS = { gray: 39, red: 49, orange: 74 };
+
+function getRatingThresholds() {
+  const t = getSetting('ratingColors', null) || {};
+  return {
+    gray: Number.isFinite(+t.gray) ? +t.gray : DEFAULT_RATING_THRESHOLDS.gray,
+    red: Number.isFinite(+t.red) ? +t.red : DEFAULT_RATING_THRESHOLDS.red,
+    orange: Number.isFinite(+t.orange) ? +t.orange : DEFAULT_RATING_THRESHOLDS.orange,
+  };
+}
+
 /** Return a color for a given AniList score (0–100) */
 function getRatingColor(score) {
   if (typeof score !== 'number') return '#999';
-  if (score <= 39) return '#888888';
-  if (score <= 49) return '#cc4444';
-  if (score <= 74) return '#cc8800';
+  const t = getRatingThresholds();
+  if (score <= t.gray) return '#888888';
+  if (score <= t.red) return '#cc4444';
+  if (score <= t.orange) return '#cc8800';
   return '#00cc66';
 }
 
@@ -167,6 +181,8 @@ function setSetting(name, value) {
 function applySettingsSideEffects() {
   const thumbSize = normalizeSize(getSetting('imageSize', '64px'));
   document.documentElement.style.setProperty('--sp-thumb-size', thumbSize);
+  // Color thresholds may have changed (e.g. synced from another device)
+  if (typeof rerenderAllRatings === 'function') rerenderAllRatings();
 }
 
 /* ------------------------------------------------------------------
@@ -434,11 +450,12 @@ async function fetchAniListRatingsBatch(items) {
   if (!items.length) return results;
 
   const params = items.map((_, i) => `$s${i}: String`).join(', ');
-  const fields = items.map((_, i) => `m${i}: Media(search: $s${i}, type: ANIME) { averageScore }`).join('\n');
+  const fields = items.map((_, i) => `m${i}: Media(search: $s${i}, type: ANIME) { averageScore meanScore }`).join('\n');
   const query = `query (${params}) {\n${fields}\n}`;
+  const overrides = getSetting('titleOverrides', {}) || {};
   const variables = {};
   items.forEach((it, i) => {
-    variables[`s${i}`] = it.normalizedTitle;
+    variables[`s${i}`] = overrides[it.normalizedTitle] || it.normalizedTitle;
   });
 
   try {
@@ -446,7 +463,10 @@ async function fetchAniListRatingsBatch(items) {
     const json = await gmFetchAniList(query, variables);
     const cache = readRatingCache();
     items.forEach((it, i) => {
-      const score = json?.data?.[`m${i}`]?.averageScore ?? null;
+      // averageScore appears only after enough votes; fall back to meanScore
+      // so freshly airing shows get a rating instead of N/A
+      const media = json?.data?.[`m${i}`];
+      const score = media?.averageScore ?? media?.meanScore ?? null;
       cache[it.normalizedTitle] = { score, timestamp: now };
       results.set(it.normalizedTitle, {
         score,
@@ -518,6 +538,7 @@ function renderRatingSpan(span, data) {
     } else {
       span.title = 'Not found on AniList — click to retry';
     }
+    span.title += '\nRight-click: set a custom AniList search title';
     return;
   }
 
@@ -543,6 +564,47 @@ function renderRatingSpan(span, data) {
   span.title = data.failed
     ? `Refresh failed — showing cached (expires in ${msToTime(remaining)})\nClick to retry`
     : `Loaded from cache (expires in ${msToTime(remaining)})\nClick to refresh`;
+}
+
+/** Re-render every known rating badge from cache (e.g. after the color
+ * thresholds change) */
+function rerenderAllRatings() {
+  for (const key of mediaRegistry.keys()) {
+    const data = getCachedRatingData(key);
+    if (data) renderRatingForTitle(key, data);
+  }
+}
+
+/** Ask for a custom AniList search title for shows whose SubsPlease
+ * romanization AniList doesn't know (e.g. Korean series). Synced. */
+function promptTitleOverride(normalizedTitle) {
+  const overrides = { ...(getSetting('titleOverrides', {}) || {}) };
+  const current = overrides[normalizedTitle] || '';
+  const input = prompt(
+    `Custom AniList search title for:\n"${normalizedTitle}"\n\nUseful when AniList uses a different romanization (e.g. Korean shows).\nLeave empty to remove the override.`,
+    current,
+  );
+  if (input === null) return;
+  const trimmed = input.trim();
+  if (trimmed) {
+    overrides[normalizedTitle] = trimmed;
+  } else {
+    delete overrides[normalizedTitle];
+  }
+  setSetting('titleOverrides', overrides);
+
+  const cache = readRatingCache();
+  delete cache[normalizedTitle];
+  writeRatingCache(cache);
+  ensureRatingForTitle(normalizedTitle, null, true);
+}
+
+function attachRatingSpanHandlers(span, normalizedTitle) {
+  span.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    promptTitleOverride(normalizedTitle);
+  });
 }
 
 function renderRatingForTitle(normalizedTitle, data) {
@@ -623,6 +685,7 @@ function addRatingToTitle(titleDiv, titleText, normalizedTitle) {
     e.stopPropagation();
     ensureRatingForTitle(normalizedTitle, titleText, true);
   });
+  attachRatingSpanHandlers(ratingSpan, normalizedTitle);
 
   return ratingSpan;
 }
@@ -1160,6 +1223,60 @@ function ensureStyles() {
     .sp-sync-status.ok { color: #00cc66; }
     .sp-sync-status.error { color: #cc4444; }
     .sp-sync-status.syncing { color: #cc8800; }
+    .sp-version {
+      font-size: 11px;
+      font-weight: normal;
+      color: #888;
+      margin-left: 6px;
+    }
+    .sp-thresholds {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+      font-size: 13px;
+    }
+    .sp-thresholds input[type="number"] {
+      width: 52px;
+      padding: 4px 6px;
+      border-radius: 5px;
+      border: 1px solid #bbb;
+      background: inherit;
+      color: inherit;
+      margin-right: 6px;
+    }
+    .sp-dot {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .sp-sync-details {
+      margin-top: 16px;
+      border: 1px solid rgba(128, 128, 128, 0.35);
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+    .sp-sync-details summary {
+      cursor: pointer;
+      user-select: none;
+      font-size: 13.5px;
+    }
+    .sp-sync-details[open] summary {
+      margin-bottom: 8px;
+    }
+    .sp-muted-inline {
+      color: #888;
+      font-size: 12px;
+      margin-left: 4px;
+    }
+    .sp-footer {
+      margin-top: 18px;
+      justify-content: flex-end;
+      border-top: 1px solid rgba(128, 128, 128, 0.25);
+      padding-top: 12px;
+    }
     `;
   const style = document.createElement('style');
   style.id = 'sp-styles';
@@ -1390,6 +1507,7 @@ function initShowsPage() {
       queueShowsRatingFetch(normalizedTitle, titleText, true);
       _runShowsQueue();
     });
+    attachRatingSpanHandlers(ratingSpan, normalizedTitle);
 
     wrapper.appendChild(star);
     wrapper.appendChild(ratingSpan);
@@ -1488,9 +1606,13 @@ function showSettingsDialog() {
 
   const favoritesCount = Object.keys(getFavorites()).length;
   const hasToken = !!getSyncToken();
+  const thresholds = getRatingThresholds();
+  const syncSummary = hasToken
+    ? (_syncStatus.state === 'ok' ? '🟢 connected' : _syncStatus.state === 'error' ? '🔴 error' : '⚪ configured')
+    : '⚪ off';
 
   dialog.innerHTML = `
-    <h4>SubsPlease Fine Enhancer — Settings</h4>
+    <h4>SubsPlease Fine Enhancer <span class="sp-version">v1.6.1</span></h4>
 
     <label for="sp-image-size">Image preview size</label>
     <select id="sp-image-size">
@@ -1499,6 +1621,15 @@ function showSettingsDialog() {
       <option value="225px">Large (225px)</option>
     </select>
 
+    <label>Rating colors</label>
+    <div class="sp-thresholds">
+      <span class="sp-dot" style="background:#888888"></span> ≤ <input type="number" id="sp-th-gray" min="0" max="100" value="${thresholds.gray}">
+      <span class="sp-dot" style="background:#cc4444"></span> ≤ <input type="number" id="sp-th-red" min="0" max="100" value="${thresholds.red}">
+      <span class="sp-dot" style="background:#cc8800"></span> ≤ <input type="number" id="sp-th-orange" min="0" max="100" value="${thresholds.orange}">
+      <span class="sp-dot" style="background:#00cc66"></span> above
+    </div>
+    <div class="sp-muted">Score boundaries for gray / red / orange; green above the last one.</div>
+
     <label>Favorites (${favoritesCount})</label>
     <div class="sp-row">
       <button type="button" class="sp-btn" id="sp-export">Export</button>
@@ -1506,21 +1637,23 @@ function showSettingsDialog() {
       <button type="button" class="sp-btn sp-danger" id="sp-clear-favs">Clear all</button>
     </div>
 
-    <label for="sp-sync-token">Sync (GitHub Gist)</label>
-    <div class="sp-muted">
-      Favorites and settings sync across devices through a private Gist.
-      Create a <b>fine-grained</b> or classic token with only the <b>gist</b> scope at
-      github.com → Settings → Developer settings → Personal access tokens,
-      then paste it here on each device.
-    </div>
-    <input type="password" id="sp-sync-token" placeholder="${hasToken ? '••••••••  (token saved)' : 'ghp_… or github_pat_…'}" autocomplete="off">
-    <div class="sp-sync-status" id="sp-sync-status"></div>
-    <div class="sp-row">
-      <button type="button" class="sp-btn sp-primary" id="sp-sync-now">Sync now</button>
-      <button type="button" class="sp-btn sp-danger" id="sp-sync-disconnect" ${hasToken ? '' : 'disabled'}>Disconnect</button>
-    </div>
+    <details class="sp-sync-details" id="sp-sync-details">
+      <summary><b>Sync</b> — GitHub Gist <span class="sp-muted-inline">${syncSummary}</span></summary>
+      <div class="sp-muted">
+        Favorites and settings sync across devices through a private Gist.
+        Create a token with only the <b>gist</b> scope
+        (github.com → Settings → Developer settings → Personal access tokens)
+        and paste it here on each device.
+      </div>
+      <input type="password" id="sp-sync-token" placeholder="${hasToken ? '••••••••  (token saved)' : 'ghp_… or github_pat_…'}" autocomplete="off">
+      <div class="sp-sync-status" id="sp-sync-status"></div>
+      <div class="sp-row">
+        <button type="button" class="sp-btn sp-primary" id="sp-sync-now">Sync now</button>
+        <button type="button" class="sp-btn sp-danger" id="sp-sync-disconnect" ${hasToken ? '' : 'disabled'}>Disconnect</button>
+      </div>
+    </details>
 
-    <div class="sp-row" style="margin-top: 18px; justify-content: flex-end;">
+    <div class="sp-row sp-footer">
       <button type="button" class="sp-btn sp-primary" id="sp-save">Save</button>
       <button type="button" class="sp-btn" id="sp-close">Close</button>
     </div>
@@ -1557,7 +1690,17 @@ function showSettingsDialog() {
 
   $('#sp-save').onclick = () => {
     setSetting('imageSize', $('#sp-image-size').value);
+    const clamp = (id, def) => {
+      const v = parseInt($(id).value, 10);
+      return Number.isFinite(v) ? Math.min(100, Math.max(0, v)) : def;
+    };
+    setSetting('ratingColors', {
+      gray: clamp('#sp-th-gray', DEFAULT_RATING_THRESHOLDS.gray),
+      red: clamp('#sp-th-red', DEFAULT_RATING_THRESHOLDS.red),
+      orange: clamp('#sp-th-orange', DEFAULT_RATING_THRESHOLDS.orange),
+    });
     applySettingsSideEffects();
+    rerenderAllRatings();
     const token = saveToken();
     close();
     if (token) syncNow(true);

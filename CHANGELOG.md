@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.6.1] - 2026-07-23
+
+### Added
+- Configurable rating color thresholds (gray/red/orange boundaries, green above) in Settings — synced across devices, ratings recolor immediately on save
+- **Right-click a rating badge** to set a custom AniList search title — for shows whose SubsPlease romanization AniList doesn't know (e.g. Korean series like *Toukutsu Ou* = *Tomb Raider King*). Overrides sync across devices.
+
+### Changed
+- Settings dialog decluttered: the Gist sync setup is now a collapsed section with a compact status indicator (🟢/🔴/⚪) in its header
+- Freshly airing shows no longer show N/A: falls back to AniList `meanScore` when `averageScore` doesn't exist yet (needs enough votes)
+
 ## [1.6.0] - 2026-07-23
 
 ### Added

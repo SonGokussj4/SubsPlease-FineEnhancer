@@ -9,6 +9,7 @@ A TamperMonkey script that adds image preview functionality to the [SubsPlease](
 - Favorites with visual highlights on the main page, schedule widget, and `/shows/` listing
 - **Cross-device sync** of favorites + settings via a private GitHub Gist (star a show at work, see it at home)
 - Search box and "★ Favorites only" filter on the `/shows/` page
+- Configurable rating color thresholds; right-click a rating to set a custom AniList search title (for mismatched romanizations)
 - User-configurable image sizes
 - Dark-theme-aware settings dialog with export/import of favorites
 - Gradient overlay for better text visibility of favorite shows
