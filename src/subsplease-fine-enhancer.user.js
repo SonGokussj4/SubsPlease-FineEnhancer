@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SubsPlease Fine Enhancer
 // @namespace    https://github.com/SonGokussj4/tampermonkey-subsplease-FineEnhancer
-// @version      1.6.1
+// @version      1.6.2
 // @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands. Manage favorites with visual highlights, filter/search on /shows/, and sync favorites + settings across devices via a private GitHub Gist.
 // @author       SonGokussj4
 // @license      MIT
@@ -1416,7 +1416,9 @@ function buildShowsToolbar(container) {
       const titleText = link.getAttribute('title') || link.textContent.trim();
       const normalizedTitle = normalizeTitle(titleText);
       const cachedData = getCachedRatingData(normalizedTitle);
-      if (cachedData && !cachedData.stale) return;
+      // Skip only fresh entries that actually have a score — cached
+      // "not found" (null) entries get retried so they aren't stuck as N/A
+      if (cachedData && !cachedData.stale && typeof cachedData.score === 'number') return;
       queueShowsRatingFetch(normalizedTitle, titleText, true);
     });
     _runShowsQueue();
@@ -1499,8 +1501,10 @@ function initShowsPage() {
     // Rating badge
     const ratingSpan = document.createElement('span');
     ratingSpan.className = 'sp-shows-rating';
-    ratingSpan.textContent = 'N/A';
-    ratingSpan.style.color = '#999';
+    // '–' = not fetched yet; only an actual AniList miss renders 'N/A'
+    ratingSpan.textContent = '–';
+    ratingSpan.style.color = '#777';
+    ratingSpan.title = 'Rating not fetched yet — click to fetch';
     ratingSpan.dataset.normalizedTitle = normalizedTitle;
     ratingSpan.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -1612,7 +1616,7 @@ function showSettingsDialog() {
     : '⚪ off';
 
   dialog.innerHTML = `
-    <h4>SubsPlease Fine Enhancer <span class="sp-version">v1.6.1</span></h4>
+    <h4>SubsPlease Fine Enhancer <span class="sp-version">v1.6.2</span></h4>
 
     <label for="sp-image-size">Image preview size</label>
     <select id="sp-image-size">

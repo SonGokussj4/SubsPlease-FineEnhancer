@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.6.2] - 2026-07-23
+
+### Fixed
+- "Fetch all ratings" and the letter-section buttons on `/shows/` now retry shows whose cached result was "not found" (they previously stayed stuck as N/A until clicked individually)
+- Shows whose rating was never fetched now display "–" instead of a misleading "N/A" — N/A now always means AniList really had no result
+
 ## [1.6.1] - 2026-07-23
 
 ### Added
