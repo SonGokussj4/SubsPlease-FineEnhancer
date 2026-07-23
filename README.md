@@ -53,47 +53,55 @@ How it works:
 
 ## DEVELOPMENT
 
-### Chrome / Opera
+The idea: instead of copy-pasting the script into Tampermonkey after every change, you create a small **dev wrapper script** in Tampermonkey whose only job is to `@require` the real file from your local repo. Edit the repo file, refresh the page, done.
+
+> ⚠️ **The #1 gotcha:** Tampermonkey takes `@grant` and `@connect` permissions from the **wrapper's header**, NOT from the `@require`d file. If the wrapper header is missing a grant (e.g. `GM_deleteValue`) or a `@connect` domain (e.g. `api.github.com`), the script throws `GM_xxx is not defined` or `Refused to connect to … not a part of the @connect list` — even though the required file declares them. **Whenever the header of `src/subsplease-fine-enhancer.user.js` changes, copy the `@grant` / `@connect` lines into your dev wrapper too.**
+
+### Chrome / Opera / Edge (file:// require)
+
+1. Enable local file access for Tampermonkey: `chrome://extensions` → Tampermonkey → Details → **Allow access to file URLs**.
+2. Create a new script in Tampermonkey with only this header (adjust the path; on Windows use `file:///C:/path/to/repo/...`):
 
 ```js
 // ==UserScript==
 // @name         [DEV] SubsPlease Fine Enhancer
 // @match        https://subsplease.org/*
-// @require      file:///C:/PATH/TO/YOUR/REPO/src/subsplease-fine-enhancer.user.js
+// @require      file:///home/YOU/projects/SubsPlease-FineEnhancer/src/subsplease-fine-enhancer.user.js
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_deleteValue
 // @grant        GM_registerMenuCommand
 // @connect      graphql.anilist.co
+// @connect      api.github.com
+// @connect      gist.githubusercontent.com
 // @run-at       document-start
 // ==/UserScript==
 ```
 
-### Firefox
+3. Disable the production (GreasyFork) version of the script while the DEV one is active, otherwise both run and everything gets processed twice.
+4. Edit files in the repo, hit F5 on subsplease.org — changes apply immediately.
 
-There has to be more steps for Firefox
+### Firefox (localhost require)
 
-1. Navigate to the `src` folder where the `subsplease-fine-enhancer.user.js` file is located.
-2. Run a local server in that directory. You can use Python's built-in HTTP server for this:
+Firefox blocks `file://` requires, so serve the file over HTTP instead:
+
+1. Run a local server in the `src` directory:
    - python: `python3 -m http.server 8080`
    - node: `npx http-server -p 8080`
-3. Important: Open the Tampermonkey Dashboard, go to
-   - Settings -> Externals -> Update Interval and set it to Always.
-   - Otherwise, Tampermonkey will cache your code and your saves won't show up on refresh.
-4. Create a new script in Tampermonkey and use the following header:
+2. Important: Tampermonkey Dashboard → Settings → Externals → **Update Interval: Always** — otherwise Tampermonkey caches the required file and your saves won't show up on refresh.
+3. Create the same wrapper as above, but with:
 
 ```js
-// ==UserScript==
-// @name         [DEV] SubsPlease Fine Enhancer
-// @match        https://subsplease.org/*
 // @require      http://localhost:8080/subsplease-fine-enhancer.user.js
-// @grant        GM_xmlhttpRequest
-// @grant        GM_addStyle
-// @grant        GM_setValue
-// @grant        GM_getValue
-// @grant        GM_registerMenuCommand
-// @connect      graphql.anilist.co
-// @run-at       document-start
-// ==/UserScript==
 ```
+
+(keep all the `@grant` / `@connect` lines identical to the Chrome variant).
+
+### Testing the Gist sync in dev
+
+- Use a GitHub token with **only the `gist` scope**; paste it via Tampermonkey menu → Settings → Sync.
+- The sync gist is found by filename (`subsplease-fineenhancer-sync.json`), so a dev browser and your production browsers share the same gist — convenient, but remember your dev experiments touch your real favorites. To sandbox, use a token from a second GitHub account.
+- Watch the browser console: sync failures are logged there (`Sync failed: …`), and the settings dialog shows live status. A "Network error reaching GitHub" almost always means the wrapper header is missing `@connect api.github.com` (see the gotcha above).
+- After changing the token, the stored gist id is re-resolved automatically; **Disconnect** in Settings clears both token and gist id from that browser.
