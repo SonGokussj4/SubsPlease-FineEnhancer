@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.6.4] - 2026-07-23
+
+### Fixed
+- Ratings still settled back to N/A on `/shows/` and single clicks were flaky: the flaky single clicks were AniList **rate limiting** (~30 req/min), and 429 / partial-error responses were still treated as "not found". Now:
+  - When AniList rejects a batch (query complexity), the script switches to **one-by-one requests** for the rest of the session instead of repeatedly retrying doomed batches.
+  - Sequential requests are **paced at ~28/min** to stay under the rate limit, and ratings fill in progressively as each arrives.
+  - **HTTP 429** is honored: the script waits for the `Retry-After` window and retries instead of caching N/A.
+  - **HTTP 200 responses that carry a GraphQL `errors` array** (partial failures) are no longer cached as N/A — only a clean response with no errors counts as a real "not found".
+
 ## [1.6.3] - 2026-07-23
 
 ### Fixed
