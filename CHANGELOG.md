@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.6.3] - 2026-07-23
+
+### Fixed
+- Bulk rating fetches on `/shows/` silently produced N/A: AniList rejects large aliased queries (query complexity limit), and the rejected response was being cached as "not found". Whole-request failures (complexity, rate limit, server errors) are now detected, never cached, and rejected batches automatically split in half until they fit. Default batch size lowered to 5.
+
 ## [1.6.2] - 2026-07-23
 
 ### Fixed

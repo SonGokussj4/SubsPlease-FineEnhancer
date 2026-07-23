@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SubsPlease Fine Enhancer
 // @namespace    https://github.com/SonGokussj4/tampermonkey-subsplease-FineEnhancer
-// @version      1.6.2
+// @version      1.6.3
 // @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands. Manage favorites with visual highlights, filter/search on /shows/, and sync favorites + settings across devices via a private GitHub Gist.
 // @author       SonGokussj4
 // @license      MIT
@@ -29,7 +29,7 @@ const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 const SHOWS_ANY_LINK_SELECTOR = 'a[href^="/shows/"][title]';
 const SHOWS_LINK_SELECTOR = 'a[href^="/shows/"][title]:not(.sp-shows-processed)';
 const SHOWS_HEADING_SELECTOR = 'h3';
-const ANILIST_BATCH_SIZE = 10; // titles per GraphQL request
+const ANILIST_BATCH_SIZE = 5; // titles per GraphQL request (larger batches can trip AniList's query complexity limit; rejected batches auto-split)
 const ANILIST_BATCH_DELAY_MS = 1200; // pause between batched requests
 const SYNC_FILENAME = 'subsplease-fineenhancer-sync.json';
 const SYNC_TOKEN_KEY = 'spSyncToken';
@@ -419,7 +419,7 @@ function gmFetchAniList(query, variables) {
       data: JSON.stringify({ query, variables }),
       onload: (response) => {
         try {
-          resolve(JSON.parse(response.responseText));
+          resolve({ status: response.status, json: JSON.parse(response.responseText) });
         } catch (e) {
           reject(e);
         }
@@ -460,12 +460,30 @@ async function fetchAniListRatingsBatch(items) {
 
   try {
     console.log(`AniList: fetching ${items.length} rating(s) in one request`);
-    const json = await gmFetchAniList(query, variables);
+    const { status, json } = await gmFetchAniList(query, variables);
+
+    // A whole-request rejection (complexity limit, rate limit, server error)
+    // comes back with data missing/null. Never cache that as "not found" —
+    // split the batch until it fits, or fail the single item visibly.
+    if (!json?.data || status === 429 || status >= 500) {
+      const msg = json?.errors?.map((e) => e.message).join('; ') || `HTTP ${status}`;
+      if (items.length > 1) {
+        console.warn(`AniList rejected a batch of ${items.length} (${msg}) — splitting in half`);
+        const mid = Math.ceil(items.length / 2);
+        const first = await fetchAniListRatingsBatch(items.slice(0, mid));
+        await new Promise((r) => setTimeout(r, ANILIST_BATCH_DELAY_MS));
+        const second = await fetchAniListRatingsBatch(items.slice(mid));
+        return new Map([...first, ...second]);
+      }
+      throw new Error(`AniList request failed: ${msg}`);
+    }
+
     const cache = readRatingCache();
     items.forEach((it, i) => {
       // averageScore appears only after enough votes; fall back to meanScore
-      // so freshly airing shows get a rating instead of N/A
-      const media = json?.data?.[`m${i}`];
+      // so freshly airing shows get a rating instead of N/A.
+      // A null alias alongside a valid data object is a real "not found".
+      const media = json.data[`m${i}`];
       const score = media?.averageScore ?? media?.meanScore ?? null;
       cache[it.normalizedTitle] = { score, timestamp: now };
       results.set(it.normalizedTitle, {
@@ -1616,7 +1634,7 @@ function showSettingsDialog() {
     : '⚪ off';
 
   dialog.innerHTML = `
-    <h4>SubsPlease Fine Enhancer <span class="sp-version">v1.6.2</span></h4>
+    <h4>SubsPlease Fine Enhancer <span class="sp-version">v1.6.3</span></h4>
 
     <label for="sp-image-size">Image preview size</label>
     <select id="sp-image-size">
