@@ -1,4 +1,4 @@
-# SubsPlease ImgPreview
+# SubsPlease Fine Enhancer
 
 A TamperMonkey script that adds image preview functionality to the [SubsPlease](https://subsplease.org/) anime streaming site.
 

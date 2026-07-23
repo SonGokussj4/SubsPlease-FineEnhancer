@@ -883,14 +883,18 @@ async function syncNow(manual = false) {
       }
     }
 
-    const beforeFavs = JSON.stringify(getFavoritesRaw());
-    const mergedFavorites = pruneTombstones(mergeTimestamped(getFavoritesRaw(), remote.favorites));
+    const preSyncFavorites = getFavoritesRaw();
+    const beforeFavs = JSON.stringify(preSyncFavorites);
+    const mergedFavorites = pruneTombstones(mergeTimestamped(preSyncFavorites, remote.favorites));
     const mergedSettings = mergeTimestamped(getSettingsRaw(), remote.settings);
 
     saveFavoritesRaw(mergedFavorites);
     saveSettingsRaw(mergedSettings);
     applySettingsSideEffects();
-    for (const key of Object.keys(mergedFavorites)) {
+    // Refresh the union of pre- and post-sync keys so stars/highlights for
+    // favorites removed during the merge (or pruned away) also get cleared.
+    const affectedKeys = new Set([...Object.keys(preSyncFavorites), ...Object.keys(mergedFavorites)]);
+    for (const key of affectedKeys) {
       refreshFavoriteVisuals(key);
     }
     applyShowsFilter();
@@ -1761,8 +1765,7 @@ function showSettingsDialog() {
       red: clamp('#sp-th-red', DEFAULT_RATING_THRESHOLDS.red),
       orange: clamp('#sp-th-orange', DEFAULT_RATING_THRESHOLDS.orange),
     });
-    applySettingsSideEffects();
-    rerenderAllRatings();
+    applySettingsSideEffects(); // also re-renders ratings with the new thresholds
     const token = saveToken();
     close();
     if (token) syncNow(true);
