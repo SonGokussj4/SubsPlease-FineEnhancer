@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.7.0] - 2026-07-24
+
+### Fixed
+- **Releases page fired one AniList request per row at once** (~20 concurrent on load), which alone could trip the rate limit and cause the N/A flakiness. All rating fetches — both pages — now go through a single paced, batched queue.
+- **A failed fetch could permanently wedge the rating queue**: the queue runner had no `try/finally`, so one unexpected error left it "running" forever and every later click silently did nothing. It now always resets.
+- A missing/undefined fetch result threw a `TypeError` while rendering, aborting the queue mid-run and leaving badges stuck on `…`. Missing results now render a retryable N/A.
+- Unhandled promise rejections from rating refreshes are now caught.
+- `ensureStyles()` no longer throws if called before `<head>` exists.
+
+### Added
+- **Live status pill** (bottom-right) showing what the script is doing: `Fetching ratings… 12/40`, `Ratings updated (12)`, sync results, and errors.
+- **Rate-limit countdown**: a 429 now shows `AniList rate limit — resuming in 45s` instead of looking frozen.
+- Pending rating badges **pulse** while loading, so `…` clearly reads as in-progress.
+- `/shows/` fetch buttons show a **busy state** while the queue drains (filter/search stay usable); pressing a letter with nothing to do says `All ratings already up to date`.
+- Background syncs stay silent, but a sync that **pulls in favorites from another device** announces itself; sync failures replace the old blocking `alert()` with a toast.
+- All animations respect `prefers-reduced-motion`.
+
 ## [1.6.4] - 2026-07-23
 
 ### Fixed

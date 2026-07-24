@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SubsPlease Fine Enhancer
 // @namespace    https://github.com/SonGokussj4/tampermonkey-subsplease-FineEnhancer
-// @version      1.6.4
+// @version      1.7.0
 // @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands. Manage favorites with visual highlights, filter/search on /shows/, and sync favorites + settings across devices via a private GitHub Gist.
 // @author       SonGokussj4
 // @license      MIT
@@ -112,6 +112,58 @@ function getRatingColor(score) {
   if (score <= t.red) return '#cc4444';
   if (score <= t.orange) return '#cc8800';
   return '#00cc66';
+}
+
+/* ------------------------------------------------------------------
+ * STATUS TOAST (live feedback for fetching / syncing / rate limits)
+ * ---------------------------------------------------------------- */
+
+let _toastEl = null;
+let _toastHideTimer = null;
+
+function ensureToast() {
+  if (_toastEl && _toastEl.isConnected) return _toastEl;
+  const host = document.body || document.documentElement;
+  if (!host) return null;
+  const el = document.createElement('div');
+  el.className = 'sp-toast';
+  el.setAttribute('role', 'status');
+  el.setAttribute('aria-live', 'polite');
+  host.appendChild(el);
+  _toastEl = el;
+  return el;
+}
+
+/** Show a small status pill in the corner.
+ * state: 'info' | 'ok' | 'warn' | 'error'; sticky keeps it until replaced. */
+function showToast(message, { state = 'info', spinner = false, sticky = false } = {}) {
+  ensureStyles();
+  const el = ensureToast();
+  if (!el) return;
+
+  el.textContent = '';
+  if (spinner) {
+    const dot = document.createElement('span');
+    dot.className = 'sp-spinner';
+    el.appendChild(dot);
+  }
+  const text = document.createElement('span');
+  text.textContent = message;
+  el.appendChild(text);
+  el.className = `sp-toast sp-toast-${state} sp-toast-visible`;
+
+  clearTimeout(_toastHideTimer);
+  if (!sticky) {
+    _toastHideTimer = setTimeout(() => el.classList.remove('sp-toast-visible'), 4000);
+  }
+}
+
+/** Mark the /shows/ toolbar buttons busy while the queue drains. */
+function setToolbarBusy(busy) {
+  document.querySelectorAll('.sp-shows-fetch-btn[data-sp-fetch]').forEach((btn) => {
+    btn.classList.toggle('sp-busy', !!busy);
+    btn.disabled = !!busy;
+  });
 }
 
 /* ------------------------------------------------------------------
@@ -436,6 +488,16 @@ function gmFetchAniList(query, variables) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** Wait, ticking a visible countdown so a long pause never looks like a hang. */
+async function countdown(ms, label) {
+  const end = Date.now() + ms;
+  let remaining;
+  while ((remaining = end - Date.now()) > 0) {
+    showToast(`${label} ${Math.ceil(remaining / 1000)}s`, { state: 'warn', sticky: true });
+    await sleep(Math.min(1000, remaining));
+  }
+}
+
 /** Once AniList rejects a multi-alias query (complexity limit), stop
  * trying batches for the rest of the session and go one-by-one. */
 let _anilistSingleMode = false;
@@ -506,7 +568,7 @@ async function fetchAniListRatingsBatch(items, isRetry = false) {
         if (isRetry) throw new Error(`AniList rate limit persists: ${msg}`);
         const waitMs = parseRetryAfterMs(headers);
         console.warn(`AniList rate limit hit — waiting ${Math.round(waitMs / 1000)}s before retrying`);
-        await sleep(waitMs);
+        await countdown(waitMs, 'AniList rate limit — resuming in');
         return fetchAniListRatingsBatch(items, true);
       }
 
@@ -574,14 +636,25 @@ function getCachedRatingData(normalizedTitle) {
 
 function renderRatingSpan(span, data) {
   if (!span || !span.isConnected) return;
+  // A missing result must never throw — that would abort the fetch queue
+  // mid-run and leave every remaining badge stuck on "…".
+  if (!data) {
+    span.classList.remove('sp-rating-pending');
+    span.textContent = 'N/A';
+    span.style.color = '#999';
+    span.title = 'No response from AniList — click to retry';
+    return;
+  }
 
   if (data.loading) {
+    span.classList.add('sp-rating-pending');
     span.textContent = '…';
     span.style.color = '#999';
     span.title = data.message || 'Loading rating…';
     return;
   }
 
+  span.classList.remove('sp-rating-pending');
   const hasScore = typeof data.score === 'number';
 
   if (!hasScore) {
@@ -654,7 +727,7 @@ function promptTitleOverride(normalizedTitle) {
   const cache = readRatingCache();
   delete cache[normalizedTitle];
   writeRatingCache(cache);
-  ensureRatingForTitle(normalizedTitle, null, true);
+  ensureRatingForTitle(normalizedTitle, null, true).catch(() => {});
 }
 
 function attachRatingSpanHandlers(span, normalizedTitle) {
@@ -741,11 +814,109 @@ function addRatingToTitle(titleDiv, titleText, normalizedTitle) {
 
   ratingSpan.addEventListener('click', (e) => {
     e.stopPropagation();
-    ensureRatingForTitle(normalizedTitle, titleText, true);
+    ensureRatingForTitle(normalizedTitle, titleText, true).catch(() => {});
   });
   attachRatingSpanHandlers(ratingSpan, normalizedTitle);
 
   return ratingSpan;
+}
+
+/* ------------------------------------------------------------------
+ * RATING FETCH QUEUE (shared by the releases and /shows/ pages)
+ *
+ * Every rating fetch goes through one paced queue so a page with many
+ * rows can't fire dozens of concurrent AniList requests and trip the
+ * rate limit.
+ * ---------------------------------------------------------------- */
+
+const _ratingQueue = [];
+const _ratingQueued = new Map();
+let _ratingQueueIndex = 0;
+let _ratingQueueRunning = false;
+let _ratingQueueDone = 0;
+let _ratingQueueFetched = 0;
+
+function queueRatingFetch(normalizedTitle, originalTitle, force = false) {
+  const existing = _ratingQueued.get(normalizedTitle);
+  if (existing) {
+    if (force) existing[2] = true;
+    return;
+  }
+  const entry = [normalizedTitle, originalTitle, !!force];
+  _ratingQueued.set(normalizedTitle, entry);
+  _ratingQueue.push(entry);
+  renderRatingForTitle(normalizedTitle, { loading: true, message: 'Queued for AniList…' });
+}
+
+function _reportQueueProgress() {
+  const total = _ratingQueue.length;
+  const remaining = total - _ratingQueueDone;
+  setToolbarBusy(remaining > 0);
+  if (remaining > 0) {
+    showToast(`Fetching ratings… ${_ratingQueueDone}/${total}`, { spinner: true, sticky: true });
+  }
+}
+
+/** Drain the queue in batches of ANILIST_BATCH_SIZE — one GraphQL
+ * request per batch instead of one per title. Wrapped in try/finally so
+ * an unexpected error can never leave the queue permanently wedged. */
+async function _runRatingQueue() {
+  if (_ratingQueueRunning) return;
+  _ratingQueueRunning = true;
+  _reportQueueProgress();
+
+  try {
+    while (_ratingQueueIndex < _ratingQueue.length) {
+      const batch = [];
+      while (batch.length < ANILIST_BATCH_SIZE && _ratingQueueIndex < _ratingQueue.length) {
+        batch.push(_ratingQueue[_ratingQueueIndex++]);
+      }
+
+      const toFetch = [];
+      for (const [normalizedTitle, originalTitle, force] of batch) {
+        const cached = getCachedRatingData(normalizedTitle);
+        // Re-fetch cached misses (score null) so they don't stay stuck as N/A
+        if (cached && !cached.stale && !force && typeof cached.score === 'number') {
+          renderRatingForTitle(normalizedTitle, cached);
+        } else {
+          renderRatingForTitle(normalizedTitle, { loading: true });
+          toFetch.push({ normalizedTitle, sourceTitle: originalTitle || normalizedTitle });
+        }
+      }
+
+      if (toFetch.length) {
+        const results = await fetchAniListRatingsBatch(toFetch);
+        for (const it of toFetch) {
+          renderRatingForTitle(it.normalizedTitle, results.get(it.normalizedTitle));
+        }
+        _ratingQueueFetched += toFetch.length;
+      }
+
+      for (const [normalizedTitle] of batch) {
+        _ratingQueued.delete(normalizedTitle);
+      }
+      _ratingQueueDone += batch.length;
+      _reportQueueProgress();
+
+      if (toFetch.length && _ratingQueueIndex < _ratingQueue.length) {
+        await sleep(ANILIST_BATCH_DELAY_MS);
+      }
+    }
+
+    // Only announce when we actually hit the network — cache-only runs stay quiet
+    if (_ratingQueueFetched) showToast(`Ratings updated (${_ratingQueueFetched})`, { state: 'ok' });
+  } catch (err) {
+    console.error('Rating queue stopped unexpectedly:', err);
+    showToast('Rating fetch failed — click a rating to retry', { state: 'error' });
+  } finally {
+    _ratingQueue.length = 0;
+    _ratingQueueIndex = 0;
+    _ratingQueueDone = 0;
+    _ratingQueueFetched = 0;
+    _ratingQueued.clear();
+    _ratingQueueRunning = false;
+    setToolbarBusy(false);
+  }
 }
 
 /* ------------------------------------------------------------------
@@ -756,7 +927,7 @@ let _syncInFlight = false;
 let _syncStatus = { state: 'idle', message: 'Not configured', time: null };
 const _syncStatusListeners = new Set();
 
-function setSyncStatus(state, message) {
+function setSyncStatus(state, message, { notify = false } = {}) {
   _syncStatus = { state, message, time: Date.now() };
   for (const cb of _syncStatusListeners) {
     try {
@@ -764,6 +935,15 @@ function setSyncStatus(state, message) {
     } catch (e) {
       /* listener gone */
     }
+  }
+  // Errors always surface; success/progress only when the user asked for it,
+  // so routine background syncs stay silent.
+  if (notify || state === 'error') {
+    showToast(message, {
+      state: state === 'ok' ? 'ok' : state === 'error' ? 'error' : 'info',
+      spinner: state === 'syncing',
+      sticky: state === 'syncing',
+    });
   }
 }
 
@@ -862,7 +1042,7 @@ async function syncNow(manual = false) {
   }
   if (_syncInFlight) return;
   _syncInFlight = true;
-  setSyncStatus('syncing', 'Syncing…');
+  setSyncStatus('syncing', 'Syncing…', { notify: manual });
 
   try {
     const gistId = await findOrCreateGist(token);
@@ -898,7 +1078,8 @@ async function syncNow(manual = false) {
       refreshFavoriteVisuals(key);
     }
     applyShowsFilter();
-    if (beforeFavs !== JSON.stringify(mergedFavorites)) {
+    const favoritesChanged = beforeFavs !== JSON.stringify(mergedFavorites);
+    if (favoritesChanged) {
       console.log('Sync: favorites updated from remote.');
     }
 
@@ -918,11 +1099,17 @@ async function syncNow(manual = false) {
     }
 
     const favCount = Object.values(mergedFavorites).filter((f) => f && !f.removed).length;
-    setSyncStatus('ok', `Synced ✓ (${favCount} favorites)`);
+    // Announce a background sync only when it actually brought something new in
+    setSyncStatus(
+      'ok',
+      favoritesChanged ? `Favorites synced from another device (${favCount})` : `Synced ✓ (${favCount} favorites)`,
+      { notify: manual || favoritesChanged },
+    );
   } catch (err) {
     console.error('Sync failed:', err);
     setSyncStatus('error', `Sync failed: ${err.message}`);
-    if (manual) alert(`SubsPlease Fine Enhancer sync failed:\n${err.message}`);
+    /* toast is emitted by setSyncStatus for error states */
+    // No alert() — the error toast and the dialog's status line already show it
   } finally {
     _syncInFlight = false;
   }
@@ -1012,7 +1199,7 @@ function initScheduleFavorites() {
 
 /** Inject styles (only once) */
 function ensureStyles() {
-  if (document.getElementById('sp-styles')) return;
+  if (!document.head || document.getElementById('sp-styles')) return;
   const css = `
     #releases-table td .sp-img-wrapper {
       display: flex;
@@ -1285,6 +1472,61 @@ function ensureStyles() {
     .sp-sync-status.ok { color: #00cc66; }
     .sp-sync-status.error { color: #cc4444; }
     .sp-sync-status.syncing { color: #cc8800; }
+    .sp-toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: min(360px, calc(100vw - 32px));
+      padding: 9px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.3;
+      color: #f2f2f2;
+      background: rgba(28, 28, 32, 0.96);
+      border: 1px solid rgba(255, 215, 0, 0.35);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .sp-toast-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .sp-toast-ok { border-color: rgba(0, 204, 102, 0.6); }
+    .sp-toast-warn { border-color: rgba(204, 136, 0, 0.7); }
+    .sp-toast-error { border-color: rgba(204, 68, 68, 0.7); }
+    .sp-spinner {
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 215, 0, 0.25);
+      border-top-color: rgba(255, 215, 0, 0.95);
+      animation: sp-spin 0.7s linear infinite;
+    }
+    @keyframes sp-spin { to { transform: rotate(360deg); } }
+    .sp-rating-pending {
+      animation: sp-pulse 1s ease-in-out infinite;
+    }
+    @keyframes sp-pulse {
+      0%, 100% { opacity: 0.35; }
+      50% { opacity: 1; }
+    }
+    .sp-shows-fetch-btn.sp-busy {
+      opacity: 0.55;
+      cursor: progress;
+      transform: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sp-spinner, .sp-rating-pending { animation: none; }
+    }
     .sp-version {
       font-size: 11px;
       font-weight: normal;
@@ -1350,65 +1592,7 @@ function ensureStyles() {
  * SHOWS PAGE (/shows/)
  * ---------------------------------------------------------------- */
 
-const _showsQueue = [];
-const _showsQueued = new Map();
-let _showsQueueIndex = 0;
-let _showsQueueRunning = false;
 const _showsFilter = { text: '', favoritesOnly: false };
-
-function queueShowsRatingFetch(normalizedTitle, originalTitle, force = false) {
-  const existing = _showsQueued.get(normalizedTitle);
-  if (existing) {
-    if (force) existing[2] = true;
-    return;
-  }
-  const entry = [normalizedTitle, originalTitle, !!force];
-  _showsQueued.set(normalizedTitle, entry);
-  _showsQueue.push(entry);
-}
-
-/** Drain the queue in batches of ANILIST_BATCH_SIZE — one GraphQL
- * request per batch instead of one per title. */
-async function _runShowsQueue() {
-  if (_showsQueueRunning) return;
-  _showsQueueRunning = true;
-  while (_showsQueueIndex < _showsQueue.length) {
-    const batch = [];
-    while (batch.length < ANILIST_BATCH_SIZE && _showsQueueIndex < _showsQueue.length) {
-      batch.push(_showsQueue[_showsQueueIndex++]);
-    }
-
-    const toFetch = [];
-    for (const [normalizedTitle, originalTitle, force] of batch) {
-      const cached = getCachedRatingData(normalizedTitle);
-      if (cached && !cached.stale && !force) {
-        renderRatingForTitle(normalizedTitle, cached);
-      } else {
-        renderRatingForTitle(normalizedTitle, { loading: true });
-        toFetch.push({ normalizedTitle, sourceTitle: originalTitle || normalizedTitle });
-      }
-    }
-
-    if (toFetch.length) {
-      const results = await fetchAniListRatingsBatch(toFetch);
-      for (const it of toFetch) {
-        renderRatingForTitle(it.normalizedTitle, results.get(it.normalizedTitle));
-      }
-    }
-
-    for (const [normalizedTitle] of batch) {
-      _showsQueued.delete(normalizedTitle);
-    }
-
-    if (toFetch.length && _showsQueueIndex < _showsQueue.length) {
-      await new Promise((r) => setTimeout(r, ANILIST_BATCH_DELAY_MS));
-    }
-  }
-  _showsQueue.length = 0;
-  _showsQueueIndex = 0;
-  _showsQueued.clear();
-  _showsQueueRunning = false;
-}
 
 function assignShowsSectionKeys(container) {
   let currentSection = '#';
@@ -1461,10 +1645,11 @@ function buildShowsToolbar(container) {
   const toolbar = document.createElement('div');
   toolbar.className = 'sp-shows-toolbar';
 
-  const addButton = (label, onClick) => {
+  const addButton = (label, onClick, isFetchButton = true) => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'sp-shows-fetch-btn';
+    if (isFetchButton) btn.dataset.spFetch = '1'; // marks it busy-disabled while fetching
     btn.textContent = label;
     btn.addEventListener('click', onClick);
     toolbar.appendChild(btn);
@@ -1473,6 +1658,7 @@ function buildShowsToolbar(container) {
 
   const enqueueByFilter = (predicate) => {
     const links = container.querySelectorAll(SHOWS_ANY_LINK_SELECTOR);
+    let queued = 0;
     links.forEach((link) => {
       if (!predicate(link)) return;
       const titleText = link.getAttribute('title') || link.textContent.trim();
@@ -1481,9 +1667,14 @@ function buildShowsToolbar(container) {
       // Skip only fresh entries that actually have a score — cached
       // "not found" (null) entries get retried so they aren't stuck as N/A
       if (cachedData && !cachedData.stale && typeof cachedData.score === 'number') return;
-      queueShowsRatingFetch(normalizedTitle, titleText, true);
+      queueRatingFetch(normalizedTitle, titleText, true);
+      queued++;
     });
-    _runShowsQueue();
+    if (!queued) {
+      showToast('All ratings already up to date', { state: 'ok' });
+      return;
+    }
+    _runRatingQueue();
   };
 
   // Search box
@@ -1505,7 +1696,7 @@ function buildShowsToolbar(container) {
     _showsFilter.favoritesOnly = !_showsFilter.favoritesOnly;
     favBtn.classList.toggle('sp-active', _showsFilter.favoritesOnly);
     applyShowsFilter();
-  });
+  }, false); // filtering stays usable while ratings are fetching
 
   addButton('Fetch all ratings', () => enqueueByFilter(() => true));
 
@@ -1570,8 +1761,8 @@ function initShowsPage() {
     ratingSpan.dataset.normalizedTitle = normalizedTitle;
     ratingSpan.addEventListener('click', (e) => {
       e.stopPropagation();
-      queueShowsRatingFetch(normalizedTitle, titleText, true);
-      _runShowsQueue();
+      queueRatingFetch(normalizedTitle, titleText, true);
+      _runRatingQueue();
     });
     attachRatingSpanHandlers(ratingSpan, normalizedTitle);
 
@@ -1585,12 +1776,12 @@ function initShowsPage() {
     if (cachedData && !cachedData.stale) {
       renderRatingForTitle(normalizedTitle, cachedData);
     } else if (isFavorite(titleText)) {
-      queueShowsRatingFetch(normalizedTitle, titleText, false);
+      queueRatingFetch(normalizedTitle, titleText, false);
     }
   });
 
   applyShowsFilter();
-  _runShowsQueue();
+  _runRatingQueue();
 }
 
 /** Attach images + ratings to release table */
@@ -1649,8 +1840,19 @@ function addImages() {
     cell.appendChild(wrapper);
 
     registerReleaseElements(normalizedTitle, { wrapper, star, ratingSpan, originalTitle: titleText });
-    ensureRatingForTitle(normalizedTitle, titleText, false);
+
+    // Render from cache immediately; anything missing/stale goes through the
+    // shared paced queue. Fetching each row directly would fire one request
+    // per release at once and trip AniList's rate limit.
+    const cachedData = getCachedRatingData(normalizedTitle);
+    if (cachedData && !cachedData.stale && typeof cachedData.score === 'number') {
+      renderRatingForTitle(normalizedTitle, cachedData);
+    } else {
+      queueRatingFetch(normalizedTitle, titleText, false);
+    }
   });
+
+  _runRatingQueue();
 }
 
 /* ------------------------------------------------------------------
@@ -1678,7 +1880,7 @@ function showSettingsDialog() {
     : '⚪ off';
 
   dialog.innerHTML = `
-    <h4>SubsPlease Fine Enhancer <span class="sp-version">v1.6.4</span></h4>
+    <h4>SubsPlease Fine Enhancer <span class="sp-version">v1.7.0</span></h4>
 
     <label for="sp-image-size">Image preview size</label>
     <select id="sp-image-size">
