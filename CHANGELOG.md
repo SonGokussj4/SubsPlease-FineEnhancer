@@ -1,5 +1,71 @@
 # Changelog
 
+## [1.7.0] - 2026-07-24
+
+### Fixed
+- **Releases page fired one AniList request per row at once** (~20 concurrent on load), which alone could trip the rate limit and cause the N/A flakiness. All rating fetches — both pages — now go through a single paced, batched queue.
+- **A failed fetch could permanently wedge the rating queue**: the queue runner had no `try/finally`, so one unexpected error left it "running" forever and every later click silently did nothing. It now always resets.
+- A missing/undefined fetch result threw a `TypeError` while rendering, aborting the queue mid-run and leaving badges stuck on `…`. Missing results now render a retryable N/A.
+- Unhandled promise rejections from rating refreshes are now caught.
+- `ensureStyles()` no longer throws if called before `<head>` exists.
+
+### Added
+- **Live status pill** (bottom-right) showing what the script is doing: `Fetching ratings… 12/40`, `Ratings updated (12)`, sync results, and errors.
+- **Rate-limit countdown**: a 429 now shows `AniList rate limit — resuming in 45s` instead of looking frozen.
+- Pending rating badges **pulse** while loading, so `…` clearly reads as in-progress.
+- `/shows/` fetch buttons show a **busy state** while the queue drains (filter/search stay usable); pressing a letter with nothing to do says `All ratings already up to date`.
+- Background syncs stay silent, but a sync that **pulls in favorites from another device** announces itself; sync failures replace the old blocking `alert()` with a toast.
+- All animations respect `prefers-reduced-motion`.
+
+## [1.6.4] - 2026-07-23
+
+### Fixed
+- Ratings still settled back to N/A on `/shows/` and single clicks were flaky: the flaky single clicks were AniList **rate limiting** (~30 req/min), and 429 / partial-error responses were still treated as "not found". Now:
+  - When AniList rejects a batch (query complexity), the script switches to **one-by-one requests** for the rest of the session instead of repeatedly retrying doomed batches.
+  - Sequential requests are **paced at ~28/min** to stay under the rate limit, and ratings fill in progressively as each arrives.
+  - **HTTP 429** is honored: the script waits for the `Retry-After` window and retries instead of caching N/A.
+  - **HTTP 200 responses that carry a GraphQL `errors` array** (partial failures) are no longer cached as N/A — only a clean response with no errors counts as a real "not found".
+
+## [1.6.3] - 2026-07-23
+
+### Fixed
+- Bulk rating fetches on `/shows/` silently produced N/A: AniList rejects large aliased queries (query complexity limit), and the rejected response was being cached as "not found". Whole-request failures (complexity, rate limit, server errors) are now detected, never cached, and rejected batches automatically split in half until they fit. Default batch size lowered to 5.
+
+## [1.6.2] - 2026-07-23
+
+### Fixed
+- "Fetch all ratings" and the letter-section buttons on `/shows/` now retry shows whose cached result was "not found" (they previously stayed stuck as N/A until clicked individually)
+- Shows whose rating was never fetched now display "–" instead of a misleading "N/A" — N/A now always means AniList really had no result
+
+## [1.6.1] - 2026-07-23
+
+### Added
+- Configurable rating color thresholds (gray/red/orange boundaries, green above) in Settings — synced across devices, ratings recolor immediately on save
+- **Right-click a rating badge** to set a custom AniList search title — for shows whose SubsPlease romanization AniList doesn't know (e.g. Korean series like *Toukutsu Ou* = *Tomb Raider King*). Overrides sync across devices.
+
+### Changed
+- Settings dialog decluttered: the Gist sync setup is now a collapsed section with a compact status indicator (🟢/🔴/⚪) in its header
+- Freshly airing shows no longer show N/A: falls back to AniList `meanScore` when `averageScore` doesn't exist yet (needs enough votes)
+
+## [1.6.0] - 2026-07-23
+
+### Added
+- **Cross-device sync**: favorites and settings sync via a private GitHub Gist (token with `gist` scope only). Star a show at work, see it starred at home. Two-way merge by timestamp — the newest action per show wins, deletions carried as tombstones so nothing resurrects.
+- Sync section in the settings dialog (token input, status, Sync now, Disconnect) plus a "Sync now" Tampermonkey menu command
+- Export / Import favorites + settings as JSON from the settings dialog
+- `/shows/` page: search box to filter shows and a "★ Favorites only" toggle (empty letter sections hide automatically)
+
+### Changed
+- **Much faster ratings**: AniList requests are now batched (10 titles per GraphQL request via aliases) — "Fetch all ratings" is ~10x faster
+- Rating cache is kept in memory (localStorage parsed once, written through) instead of re-parsed on every lookup
+- Settings dialog restyled and now respects the site's dark theme
+- Thumbnails load lazily; favorite stars have slightly larger click targets
+- "Clear all favorites" no longer reloads the page and now syncs the clear to other devices
+- Removed per-title `console.debug` noise from `normalizeTitle`
+
+### Fixed
+- `Makefile` pointed at the old script path (`src/subsplease-imgpreview.js`)
+
 ## [1.5.0] - 2026-05-27
 
 ### Fixed

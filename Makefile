@@ -18,7 +18,7 @@ endif
 # ==================================================================
 # Project Settings
 # ==================================================================
-SCRIPT := src/subsplease-imgpreview.js
+SCRIPT := src/subsplease-fine-enhancer.user.js
 REMOTE ?= origin
 CURRENT_VERSION := $(shell grep -m1 '^// @version' $(SCRIPT) | awk '{print $$3}')
 NEW_VERSION ?= $(CURRENT_VERSION)
