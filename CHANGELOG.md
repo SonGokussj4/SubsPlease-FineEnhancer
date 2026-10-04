@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.8.0] - 2026-10-04
+
+### Fixed
+- **Title parsing for specials and mixed episodes.** These used to be sent to AniList whole (N/A or a wrong match):
+  - decimal / recap episodes `— 12.5`, mixed ranges `— 01 + 02`, `— 12.5-13`
+  - specials `— OVA`, `— OAD`, `— ONA`, `— SP1`, `— Special`, `— Movie`, `— Recap`
+  - trailing notes `(END)`, `(Movie)`, `[Director's Cut]` (a `(2024)` year is kept)
+  - `S2 Part 2` → `2nd Season Part 2`; correct `11th`/`12th`/`13th` suffixes
+- **Line-wrapped titles.** Line breaks inside long release titles were kept in the title, so the same show had different keys on the releases page and `/shows/` (favorites didn't match, AniList got a mangled search). Whitespace is now collapsed.
+- Existing favorites and custom AniList titles (local and synced) are migrated to the corrected keys automatically.
+
+### Added
+- **AniDB link**: a small muted `aDB` tag after each rating. Opens the exact AniDB page (AniList → AniDB id via arm.haglund.dev), or an AniDB title search when the id is unknown.
+
 ## [1.7.0] - 2026-07-24
 
 ### Fixed

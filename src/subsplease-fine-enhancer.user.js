@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SubsPlease Fine Enhancer
 // @namespace    https://github.com/SonGokussj4/tampermonkey-subsplease-FineEnhancer
-// @version      1.7.0
+// @version      1.8.0
 // @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands. Manage favorites with visual highlights, filter/search on /shows/, and sync favorites + settings across devices via a private GitHub Gist.
 // @author       SonGokussj4
 // @license      MIT
@@ -15,6 +15,8 @@
 // @grant        GM_getValue
 // @grant        GM_deleteValue
 // @grant        GM_registerMenuCommand
+// @grant        GM_openInTab
+// @connect      arm.haglund.dev
 // @run-at       document-start
 // ==/UserScript==
 
@@ -35,6 +37,7 @@ const ANILIST_SINGLE_DELAY_MS = 2100; // one-by-one pacing: ~28 req/min, under A
 const SYNC_FILENAME = 'subsplease-fineenhancer-sync.json';
 const SYNC_TOKEN_KEY = 'spSyncToken';
 const SYNC_GIST_ID_KEY = 'spSyncGistId';
+const ANIDB_IDS_KEY = 'spAnidbIds'; // AniList id → AniDB id (permanent mapping cache)
 const TOMBSTONE_TTL_MS = 90 * 24 * 60 * 60 * 1000; // keep deletion markers 90 days
 
 // Menu commands for quick settings
@@ -54,22 +57,55 @@ function debounce(func, wait) {
   };
 }
 
-/** Normalize anime title:
- * - Remove episode markers like "— 01" / "- 03"
- * - Remove episode ranges like "— 01-24"
- * - Remove version markers like "— 01v2"
- * - Remove "(Batch)" or other bracketed notes at the end
+/** Normalize anime title into a stable key / AniList search string:
+ * - Collapse whitespace (SubsPlease wraps long titles across lines)
+ * - Remove episode markers: "— 01", "— 01v2", "— 12.5", "— 1100"
+ * - Remove ranges / mixed episodes: "— 01-24", "— 01 + 02", "— 12.5-13"
+ * - Remove special markers: "— OVA", "— OAD", "— ONA", "— SP1", "— Special", "— Movie", "— Recap"
+ * - Remove trailing notes: "(Batch)", "(END)", "[Director's Cut]" (a "(2024)" year is kept)
+ * - "S2" / "S2 Part 2" → "2nd Season" / "2nd Season Part 2"
+ * Idempotent, so already-normalized keys map to themselves.
  */
+const _EP = String.raw`(?:\d+(?:\.\d+)?(?:v\d+)?|OVA\d*|OAD\d*|ONA\d*|SP\d*|Specials?|Movie|Recap)`;
+const _EP_SUFFIX_RE = new RegExp(String.raw`(?:\s*[–—]|\s+-)\s*${_EP}(?:\s*[-~+&]\s*${_EP})*$`, 'i');
+const _NOTE_SUFFIX_RE = /\s*(?:\((?!\d{4}\))[^()]*\)|\[[^\[\]]*\])$/;
+
 function normalizeTitle(raw) {
-  return raw
-    .replace(/\s*\(Batch\)$/i, '') // remove "(Batch)" suffix
-    .replace(/\s*[–—-]\s*\d+(?:[vV]\d+)?(?:\s*-\s*\d+(?:[vV]\d+)?)?$/i, '')
-    .replace(/\s+S(\d+)$/i, (_, n) => {
+  let t = String(raw ?? '').replace(/\s+/g, ' ').trim();
+  let prev;
+  do {
+    prev = t;
+    t = t.replace(_NOTE_SUFFIX_RE, '').replace(_EP_SUFFIX_RE, '').trim();
+  } while (t !== prev && t);
+  return t
+    .replace(/\s+S(\d+)((?:\s+Part\s+\d+)?)$/i, (_, n, part) => {
       const i = parseInt(n, 10);
-      const sfx = [, 'st', 'nd', 'rd'][i] ?? 'th';
-      return ` ${i}${sfx} Season`;
+      const sfx = i % 100 >= 11 && i % 100 <= 13 ? 'th' : ([, 'st', 'nd', 'rd'][i % 10] ?? 'th');
+      return ` ${i}${sfx} Season${part}`;
     })
     .trim();
+}
+
+/** Search string for AniList/AniDB: the key minus a disambiguating "(2024)" year */
+function searchTitleFor(normalizedTitle) {
+  const overrides = getSetting('titleOverrides', {}) || {};
+  return overrides[normalizedTitle] || normalizedTitle.replace(/\s*\(\d{4}\)$/, '');
+}
+
+/** Re-key a {title: {timestamp, ...}} map with the current normalizeTitle.
+ * Collisions keep the newest entry. Returns the same object if nothing changed. */
+function migrateTitleKeys(map, isTimestamped = true) {
+  if (!map || typeof map !== 'object') return map;
+  let changed = false;
+  const out = {};
+  for (const [key, val] of Object.entries(map)) {
+    const nk = normalizeTitle(key);
+    if (nk !== key) changed = true;
+    if (!nk) continue;
+    const cur = out[nk];
+    if (cur === undefined || (isTimestamped && (val?.timestamp || 0) > (cur?.timestamp || 0))) out[nk] = val;
+  }
+  return changed ? out : map;
 }
 
 /** Convert milliseconds → "Xh Ym" */
@@ -202,7 +238,17 @@ function writeRatingCache(cache) {
 function getSettingsRaw() {
   try {
     const parsed = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
-    if (parsed && typeof parsed === 'object') return parsed;
+    if (parsed && typeof parsed === 'object') {
+      const ov = parsed.titleOverrides;
+      if (ov?.value && typeof ov.value === 'object') {
+        const migrated = migrateTitleKeys(ov.value, false);
+        if (migrated !== ov.value) {
+          parsed.titleOverrides = { ...ov, value: migrated };
+          saveSettingsRaw(parsed);
+        }
+      }
+      return parsed;
+    }
   } catch (e) {
     console.error('Failed to parse settings:', e);
   }
@@ -346,7 +392,10 @@ function registerShowsElements(normalizedTitle, { wrapper, star, ratingSpan, ori
 function getFavoritesRaw() {
   try {
     const parsed = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '{}');
-    return parsed && typeof parsed === 'object' ? parsed : {};
+    if (!parsed || typeof parsed !== 'object') return {};
+    const migrated = migrateTitleKeys(parsed);
+    if (migrated !== parsed) saveFavoritesRaw(migrated);
+    return migrated;
   } catch (e) {
     console.error('Failed to parse favorites:', e);
     return {};
@@ -544,12 +593,11 @@ async function fetchAniListRatingsBatch(items, isRetry = false) {
   if (_anilistSingleMode && items.length > 1) return fetchAniListSequentially(items);
 
   const params = items.map((_, i) => `$s${i}: String`).join(', ');
-  const fields = items.map((_, i) => `m${i}: Media(search: $s${i}, type: ANIME) { averageScore meanScore }`).join('\n');
+  const fields = items.map((_, i) => `m${i}: Media(search: $s${i}, type: ANIME) { id averageScore meanScore }`).join('\n');
   const query = `query (${params}) {\n${fields}\n}`;
-  const overrides = getSetting('titleOverrides', {}) || {};
   const variables = {};
   items.forEach((it, i) => {
-    variables[`s${i}`] = overrides[it.normalizedTitle] || it.normalizedTitle;
+    variables[`s${i}`] = searchTitleFor(it.normalizedTitle);
   });
 
   try {
@@ -587,7 +635,7 @@ async function fetchAniListRatingsBatch(items, isRetry = false) {
       // A null alias alongside a valid data object is a real "not found".
       const media = json.data[`m${i}`];
       const score = media?.averageScore ?? media?.meanScore ?? null;
-      cache[it.normalizedTitle] = { score, timestamp: now };
+      cache[it.normalizedTitle] = { score, anilistId: media?.id ?? null, timestamp: now };
       results.set(it.normalizedTitle, {
         score,
         cached: false,
@@ -738,6 +786,98 @@ function attachRatingSpanHandlers(span, normalizedTitle) {
   });
 }
 
+/* ------------------------------------------------------------------
+ * ANIDB LINK
+ * The AniList id (stored with the rating) is mapped to an AniDB id via
+ * arm.haglund.dev. Until that resolves — or if there is no mapping — the
+ * link falls back to an AniDB title search.
+ * ---------------------------------------------------------------- */
+
+function anidbSearchUrl(normalizedTitle) {
+  // Search the series name without the season suffix: AniDB names seasons
+  // differently, so the bare name lists every season to pick from.
+  const q = searchTitleFor(normalizedTitle).replace(/\s+\d+(?:st|nd|rd|th) Season(?:\s+Part\s+\d+)?$/i, '');
+  return `https://anidb.net/search/anime/?adb.search=${encodeURIComponent(q)}&do.search=1`;
+}
+
+function readAnidbIds() {
+  try {
+    return JSON.parse(localStorage.getItem(ANIDB_IDS_KEY) || '{}') || {};
+  } catch {
+    return {};
+  }
+}
+
+/** Resolve AniDB id for a title. Returns number, or null when unknown. */
+function resolveAnidbId(normalizedTitle) {
+  const anilistId = readRatingCache()[normalizedTitle]?.anilistId;
+  if (!anilistId) return Promise.resolve(null);
+  const known = readAnidbIds()[anilistId];
+  if (known !== undefined) return Promise.resolve(known);
+  return new Promise((resolve) => {
+    GM_xmlhttpRequest({
+      method: 'GET',
+      url: `https://arm.haglund.dev/api/v2/ids?source=anilist&id=${anilistId}`,
+      timeout: 4000,
+      onload: (res) => {
+        let id = null;
+        try {
+          id = JSON.parse(res.responseText)?.anidb ?? null;
+        } catch {
+          /* ignore */
+        }
+        // Cache hits and confirmed misses; transient errors (non-2xx) retry later
+        if (res.status >= 200 && res.status < 300) {
+          const ids = readAnidbIds();
+          ids[anilistId] = id;
+          try {
+            localStorage.setItem(ANIDB_IDS_KEY, JSON.stringify(ids));
+          } catch {
+            /* ignore */
+          }
+        }
+        resolve(id);
+      },
+      onerror: () => resolve(null),
+      ontimeout: () => resolve(null),
+    });
+  });
+}
+
+async function updateAnidbHref(link) {
+  const key = link.dataset.normalizedTitle;
+  const id = await resolveAnidbId(key);
+  link.href = id ? `https://anidb.net/anime/${id}` : anidbSearchUrl(key);
+  link.title = id ? 'Open on AniDB' : 'Search on AniDB';
+  link.dataset.resolved = '1';
+  return link.href;
+}
+
+/** Small, muted AniDB link placed after a rating badge */
+function createAnidbLink(normalizedTitle) {
+  const link = document.createElement('a');
+  link.className = 'sp-anidb-link';
+  link.dataset.normalizedTitle = normalizedTitle;
+  link.href = anidbSearchUrl(normalizedTitle);
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.title = 'Search on AniDB';
+  link.textContent = 'aDB';
+
+  // Resolve the exact page ahead of the click (hover / touch)
+  const warm = () => updateAnidbHref(link);
+  link.addEventListener('mouseenter', warm, { once: true });
+  link.addEventListener('touchstart', warm, { once: true, passive: true });
+  link.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    if (link.dataset.resolved) return; // href already final — let the browser open it
+    e.preventDefault();
+    const url = await updateAnidbHref(link);
+    GM_openInTab(url, { active: true });
+  });
+  return link;
+}
+
 function renderRatingForTitle(normalizedTitle, data) {
   const entry = getMediaEntry(normalizedTitle);
   pruneDisconnected(entry.ratingSpans);
@@ -811,6 +951,7 @@ function addRatingToTitle(titleDiv, titleText, normalizedTitle) {
   ratingSpan.textContent = '…';
   ratingSpan.dataset.normalizedTitle = normalizedTitle;
   titleDiv.appendChild(ratingSpan);
+  titleDiv.appendChild(createAnidbLink(normalizedTitle));
 
   ratingSpan.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -1065,8 +1206,15 @@ async function syncNow(manual = false) {
 
     const preSyncFavorites = getFavoritesRaw();
     const beforeFavs = JSON.stringify(preSyncFavorites);
-    const mergedFavorites = pruneTombstones(mergeTimestamped(preSyncFavorites, remote.favorites));
-    const mergedSettings = mergeTimestamped(getSettingsRaw(), remote.settings);
+    const mergedFavorites = pruneTombstones(mergeTimestamped(preSyncFavorites, migrateTitleKeys(remote.favorites || {})));
+    const remoteSettings = { ...(remote.settings || {}) };
+    if (remoteSettings.titleOverrides?.value) {
+      remoteSettings.titleOverrides = {
+        ...remoteSettings.titleOverrides,
+        value: migrateTitleKeys(remoteSettings.titleOverrides.value, false),
+      };
+    }
+    const mergedSettings = mergeTimestamped(getSettingsRaw(), remoteSettings);
 
     saveFavoritesRaw(mergedFavorites);
     saveSettingsRaw(mergedSettings);
@@ -1342,6 +1490,26 @@ function ensureStyles() {
       cursor: pointer;
       opacity: 1;
       line-height: 1;
+    }
+    .sp-anidb-link {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 0 3px;
+      font-size: 9px;
+      font-weight: 600;
+      line-height: 13px;
+      letter-spacing: 0.2px;
+      color: #8aa !important;
+      border: 1px solid currentColor;
+      border-radius: 3px;
+      opacity: 0.4;
+      text-decoration: none !important;
+      vertical-align: middle;
+      transition: opacity 0.15s ease;
+    }
+    .sp-anidb-link:hover {
+      opacity: 1;
+      color: #5aa9ff !important;
     }
     .sp-shows-toolbar {
       display: flex;
@@ -1768,6 +1936,7 @@ function initShowsPage() {
 
     wrapper.appendChild(star);
     wrapper.appendChild(ratingSpan);
+    wrapper.appendChild(createAnidbLink(normalizedTitle));
 
     registerShowsElements(normalizedTitle, { wrapper, star, ratingSpan, originalTitle: titleText });
 
