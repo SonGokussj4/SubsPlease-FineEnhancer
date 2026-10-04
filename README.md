@@ -71,14 +71,15 @@ The idea: instead of copy-pasting the script into Tampermonkey after every chang
 // @match        https://subsplease.org/*
 // @require      file:///home/YOU/projects/SubsPlease-FineEnhancer/src/subsplease-fine-enhancer.user.js
 // @grant        GM_xmlhttpRequest
-// @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_deleteValue
 // @grant        GM_registerMenuCommand
+// @grant        GM_openInTab
 // @connect      graphql.anilist.co
 // @connect      api.github.com
 // @connect      gist.githubusercontent.com
+// @connect      arm.haglund.dev
 // @run-at       document-start
 // ==/UserScript==
 ```
@@ -101,6 +102,21 @@ Firefox blocks `file://` requires, so serve the file over HTTP instead:
 ```
 
 (keep all the `@grant` / `@connect` lines identical to the Chrome variant).
+
+### Running the tests
+
+The script is covered by a Playwright suite that drives the real userscript in Chromium against a fake subsplease.org, AniList and GitHub Gist API — no network and no real tokens involved.
+
+```bash
+make bootstrap   # install node deps + the Chromium build Playwright drives
+make doctor      # verify your environment is ready
+make test        # run everything
+make check       # static checks: syntax, userscript metadata, types
+```
+
+- `make test SPEC=shows` runs a single spec; `VERBOSE=1 make test` lists every individual check.
+- Specs live in `test/specs/`; the fake backend and the Tampermonkey stubs are in `test/lib/env.js`.
+- `make check` also verifies that the `@grant`/`@connect` lines in this README's dev wrapper still match the real userscript header — the drift that causes the gotcha above.
 
 ### Testing the Gist sync in dev
 

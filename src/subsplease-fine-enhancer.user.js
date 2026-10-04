@@ -10,7 +10,6 @@
 // @connect      graphql.anilist.co
 // @connect      api.github.com
 // @connect      gist.githubusercontent.com
-// @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_deleteValue
@@ -222,7 +221,9 @@ function showToast(message, { state = 'info', spinner = false, sticky = false } 
 
 /** Mark the /shows/ toolbar buttons busy while the queue drains. */
 function setToolbarBusy(busy) {
-  document.querySelectorAll('.sp-shows-fetch-btn[data-sp-fetch]').forEach((btn) => {
+  /** @type {NodeListOf<HTMLButtonElement>} */ (
+    document.querySelectorAll('.sp-shows-fetch-btn[data-sp-fetch]')
+  ).forEach((btn) => {
     btn.classList.toggle('sp-busy', !!busy);
     btn.disabled = !!busy;
   });
@@ -2165,8 +2166,8 @@ function applyShowsFilter() {
   const favorites = getFavorites();
   const sectionVisible = new Map();
 
-  container.querySelectorAll('.sp-shows-item').forEach((wrapper) => {
-    const link = wrapper.querySelector(SHOWS_ANY_LINK_SELECTOR);
+  /** @type {NodeListOf<HTMLElement>} */ (container.querySelectorAll('.sp-shows-item')).forEach((wrapper) => {
+    const link = /** @type {HTMLAnchorElement} */ (wrapper.querySelector(SHOWS_ANY_LINK_SELECTOR));
     if (!link) return;
     const titleText = link.getAttribute('title') || link.textContent.trim();
     const normalizedTitle = normalizeTitle(titleText);
@@ -2180,7 +2181,9 @@ function applyShowsFilter() {
   });
 
   const filterActive = !!text || favoritesOnly;
-  container.querySelectorAll(`:scope > ${SHOWS_HEADING_SELECTOR}`).forEach((heading) => {
+  /** @type {NodeListOf<HTMLElement>} */ (
+    container.querySelectorAll(`:scope > ${SHOWS_HEADING_SELECTOR}`)
+  ).forEach((heading) => {
     const section = heading.textContent.trim() || '#';
     heading.style.display = filterActive && !sectionVisible.get(section) ? 'none' : '';
   });
@@ -2583,7 +2586,7 @@ function showSettingsDialog() {
   const observer = new MutationObserver((mutationsList) => {
     for (const mutation of mutationsList) {
       if (mutation.type === 'childList') {
-        for (const node of mutation.addedNodes) {
+        for (const node of /** @type {NodeListOf<Element>} */ (mutation.addedNodes)) {
           if (node.nodeType === Node.ELEMENT_NODE && node.querySelector?.(selector)) {
             debouncedInit();
             return;
