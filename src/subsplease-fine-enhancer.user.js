@@ -63,6 +63,9 @@ const SYNC_GIST_ID_KEY = 'spSyncGistId';
 const ANIDB_IDS_KEY = 'spAnidbIds'; // AniList id → AniDB id (permanent mapping cache)
 const TOMBSTONE_TTL_MS = 90 * 24 * 60 * 60 * 1000; // keep deletion markers 90 days
 const RATINGS_SYNC_MAX = 3000; // cap synced rating entries so the gist stays small
+const RATINGS_CACHE_MAX = 3000; // cap the local cache too, so localStorage can't fill up
+const RATINGS_HARD_TTL_MS = 180 * 24 * HOUR_MS; // drop entries untouched for ~6 months
+const REGISTRY_MAX = 4000; // cap the in-memory element registry on huge listings
 
 // Menu commands for quick settings
 GM_registerMenuCommand('Settings', showSettingsDialog);
@@ -181,6 +184,7 @@ function getRatingColor(score) {
 
 let _toastEl = null;
 let _toastHideTimer = null;
+let _toastErrorUntil = 0;
 
 function ensureToast() {
   if (_toastEl && _toastEl.isConnected) return _toastEl;
@@ -198,6 +202,11 @@ function ensureToast() {
 /** Show a small status pill in the corner.
  * state: 'info' | 'ok' | 'warn' | 'error'; sticky keeps it until replaced. */
 function showToast(message, { state = 'info', spinner = false, sticky = false } = {}) {
+  // Keep a problem on screen: routine progress/success messages must not bury
+  // an error the user still needs to read.
+  if (state !== 'error' && Date.now() < _toastErrorUntil) return;
+  if (state === 'error') _toastErrorUntil = Date.now() + 6000;
+
   ensureStyles();
   const el = ensureToast();
   if (!el) return;
@@ -249,12 +258,44 @@ function readRatingCache() {
   return _ratingCacheMem;
 }
 
+/** Drop entries nothing will use again: anything far past its TTL, and the
+ * oldest entries once the cache grows beyond RATINGS_CACHE_MAX. */
+function evictRatings(cache, max = RATINGS_CACHE_MAX) {
+  const cutoff = Date.now() - RATINGS_HARD_TTL_MS;
+  for (const [key, entry] of Object.entries(cache)) {
+    if (!entry || (entry.timestamp || 0) < cutoff) delete cache[key];
+  }
+  const keys = Object.keys(cache);
+  if (keys.length > max) {
+    keys.sort((a, b) => (cache[b]?.timestamp || 0) - (cache[a]?.timestamp || 0));
+    for (const key of keys.slice(max)) delete cache[key];
+  }
+  return cache;
+}
+
+let _quotaWarned = false;
+
 function writeRatingCache(cache) {
-  _ratingCacheMem = cache;
+  _ratingCacheMem = evictRatings(cache);
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+    localStorage.setItem(CACHE_KEY, JSON.stringify(_ratingCacheMem));
+    _quotaWarned = false;
+    return;
   } catch (e) {
-    console.error('Failed to write rating cache.', e);
+    // Most likely the quota is full. Shed the oldest half and try once more
+    // rather than silently failing every future write.
+    console.warn('Rating cache write failed, shrinking the cache.', e);
+  }
+  try {
+    _ratingCacheMem = evictRatings(_ratingCacheMem, Math.floor(RATINGS_CACHE_MAX / 2));
+    localStorage.setItem(CACHE_KEY, JSON.stringify(_ratingCacheMem));
+    _quotaWarned = false;
+  } catch (e) {
+    console.error('Failed to write rating cache even after shrinking it.', e);
+    if (!_quotaWarned) {
+      _quotaWarned = true;
+      showToast('Browser storage is full — ratings will not be remembered', { state: 'error' });
+    }
   }
 }
 
@@ -318,6 +359,22 @@ function applySettingsSideEffects() {
 const mediaRegistry = new Map();
 const ratingFetches = new Map();
 
+/** The registry holds DOM references per title. On a 1000-row /shows/ page it
+ * would otherwise grow forever; drop the least recently used entries whose
+ * nodes are all gone. */
+function pruneMediaRegistry() {
+  if (mediaRegistry.size <= REGISTRY_MAX) return;
+  for (const [key, entry] of mediaRegistry) {
+    if (mediaRegistry.size <= REGISTRY_MAX) break;
+    const sets = [
+      entry.releaseWrappers, entry.releaseStars, entry.ratingSpans,
+      entry.scheduleRows, entry.scheduleStars, entry.showsWrappers, entry.showsStars,
+    ];
+    sets.forEach(pruneDisconnected);
+    if (sets.every((set) => set.size === 0)) mediaRegistry.delete(key);
+  }
+}
+
 function getMediaEntry(normalizedTitle) {
   let entry = mediaRegistry.get(normalizedTitle);
   if (!entry) {
@@ -332,6 +389,7 @@ function getMediaEntry(normalizedTitle) {
       primaryTitle: null,
     };
     mediaRegistry.set(normalizedTitle, entry);
+    pruneMediaRegistry();
   }
   return entry;
 }
@@ -431,9 +489,10 @@ function getFavoritesRaw() {
 
 function saveFavoritesRaw(favorites) {
   try {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(pruneTombstones(favorites)));
   } catch (e) {
     console.error('Failed to save favorites:', e);
+    showToast('Could not save favorites — browser storage is full', { state: 'error' });
   }
 }
 
