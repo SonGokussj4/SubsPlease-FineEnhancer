@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SubsPlease Fine Enhancer
 // @namespace    https://github.com/SonGokussj4/tampermonkey-subsplease-FineEnhancer
-// @version      1.9.0
+// @version      1.9.1
 // @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands. Manage favorites with visual highlights, filter/search on /shows/, and sync favorites + settings across devices via a private GitHub Gist.
 // @author       SonGokussj4
 // @license      MIT
@@ -1827,6 +1827,11 @@ function ensureStyles() {
       flex-shrink: 0;
       transition: all 0.3s ease;
     }
+    /* Missing preview: neutral poster-shaped placeholder instead of alt text */
+    .sp-thumb-missing {
+      aspect-ratio: 2 / 3;
+      background: rgba(128, 128, 128, 0.25);
+    }
     .sp-text {
       display: flex;
       flex-direction: column;
@@ -2524,6 +2529,11 @@ function addImages() {
     img.src = imgUrl;
     img.loading = 'lazy';
     img.alt = link.textContent.trim() || 'preview';
+    img.addEventListener('error', () => {
+      img.alt = '';
+      img.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+      img.classList.add('sp-thumb-missing');
+    });
 
     const textDiv = document.createElement('div');
     textDiv.className = 'sp-text';
@@ -2596,7 +2606,7 @@ function showSettingsDialog() {
     : '⚪ off';
 
   dialog.innerHTML = `
-    <h4>SubsPlease Fine Enhancer <span class="sp-version">v1.9.0</span></h4>
+    <h4>SubsPlease Fine Enhancer <span class="sp-version">v1.9.1</span></h4>
 
     <label for="sp-image-size">Image preview size</label>
     <select id="sp-image-size">
