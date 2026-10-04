@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SubsPlease Fine Enhancer
 // @namespace    https://github.com/SonGokussj4/tampermonkey-subsplease-FineEnhancer
-// @version      1.8.0
+// @version      1.9.0
 // @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands. Manage favorites with visual highlights, filter/search on /shows/, and sync favorites + settings across devices via a private GitHub Gist.
 // @author       SonGokussj4
 // @license      MIT
@@ -122,18 +122,116 @@ function searchTitleFor(normalizedTitle) {
 
 /** Re-key a {title: {timestamp, ...}} map with the current normalizeTitle.
  * Collisions keep the newest entry. Returns the same object if nothing changed. */
-function migrateTitleKeys(map, isTimestamped = true) {
+/** Rewrite the keys of a title-keyed map. When two old keys collapse onto one
+ * new key, the newer record wins (for timestamped stores). */
+function remapKeys(map, keyFn, { timestamped = true } = {}) {
   if (!map || typeof map !== 'object') return map;
   let changed = false;
   const out = {};
   for (const [key, val] of Object.entries(map)) {
-    const nk = normalizeTitle(key);
+    const nk = keyFn(key);
     if (nk !== key) changed = true;
     if (!nk) continue;
     const cur = out[nk];
-    if (cur === undefined || (isTimestamped && (val?.timestamp || 0) > (cur?.timestamp || 0))) out[nk] = val;
+    if (cur === undefined || (timestamped && (val?.timestamp || 0) > (cur?.timestamp || 0))) out[nk] = val;
   }
   return changed ? out : map;
+}
+
+/* ------------------------------------------------------------------
+ * STORAGE SCHEMA MIGRATIONS
+ *
+ * Favorites, title overrides and cached ratings are all keyed by
+ * normalizeTitle(). Changing that parser silently orphans a user's data, so
+ * every such change gets a numbered migration here and a SCHEMA_VERSION bump.
+ * Migrations run once at startup and are also applied to data pulled from
+ * sync, so a device still on an older script cannot push stale keys back.
+ *
+ * To add one: append to MIGRATIONS with the next version number and bump
+ * SCHEMA_VERSION. Keep old migrations untouched — they still run for anyone
+ * upgrading from further back.
+ * ---------------------------------------------------------------- */
+
+const SCHEMA_VERSION_KEY = 'spSchemaVersion';
+const SCHEMA_VERSION = 1;
+
+const MIGRATIONS = [
+  {
+    version: 1,
+    describe: 'Re-key favorites, overrides and ratings with the current title parser',
+    migrate(stores) {
+      stores.favorites = remapKeys(stores.favorites, normalizeTitle);
+      stores.ratings = remapKeys(stores.ratings, normalizeTitle);
+      const ov = stores.settings?.titleOverrides;
+      if (ov?.value && typeof ov.value === 'object') {
+        const value = remapKeys(ov.value, normalizeTitle, { timestamped: false });
+        // Build a new object: callers detect "did anything change?" by identity.
+        if (value !== ov.value) stores.settings = { ...stores.settings, titleOverrides: { ...ov, value } };
+      }
+      return stores;
+    },
+  },
+];
+
+/** Apply every migration newer than `fromVersion` to a set of stores. */
+function migrateStores(stores, fromVersion) {
+  let out = stores;
+  for (const migration of MIGRATIONS) {
+    if (migration.version <= fromVersion) continue;
+    try {
+      out = migration.migrate(out) || out;
+    } catch (e) {
+      console.error(`Schema migration ${migration.version} failed:`, e);
+    }
+  }
+  return out;
+}
+
+/** Bring this device's stored data up to SCHEMA_VERSION. Runs once at startup,
+ * before anything reads favorites, settings or ratings. */
+function runMigrations() {
+  const stored = GM_getValue(SCHEMA_VERSION_KEY, -1);
+  let from = Number(stored);
+  if (!Number.isFinite(from) || from < 0) {
+    // No marker: either an install predating versioning (migrate everything)
+    // or a fresh one with nothing stored (nothing to do).
+    const untouched = !localStorage.getItem(FAVORITES_KEY) &&
+      !localStorage.getItem(SETTINGS_KEY) &&
+      !localStorage.getItem(CACHE_KEY);
+    from = untouched ? SCHEMA_VERSION : 0;
+  }
+  if (from >= SCHEMA_VERSION) {
+    if (Number(stored) !== SCHEMA_VERSION) GM_setValue(SCHEMA_VERSION_KEY, SCHEMA_VERSION);
+    return;
+  }
+
+  const readJson = (key, fallback) => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key) || 'null');
+      return parsed && typeof parsed === 'object' ? parsed : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  };
+
+  const before = {
+    favorites: readJson(FAVORITES_KEY, {}),
+    settings: readJson(SETTINGS_KEY, {}),
+    ratings: readJson(CACHE_KEY, {}),
+  };
+  const after = migrateStores({ ...before }, from);
+
+  try {
+    if (after.favorites !== before.favorites) localStorage.setItem(FAVORITES_KEY, JSON.stringify(after.favorites));
+    if (after.settings !== before.settings) localStorage.setItem(SETTINGS_KEY, JSON.stringify(after.settings));
+    if (after.ratings !== before.ratings) localStorage.setItem(CACHE_KEY, JSON.stringify(after.ratings));
+    _ratingCacheMem = null; // force a re-read of the migrated cache
+  } catch (e) {
+    console.error('Could not persist migrated data:', e);
+    return; // leave the version marker alone so the migration is retried
+  }
+  GM_setValue(SCHEMA_VERSION_KEY, SCHEMA_VERSION);
+  console.log(`Storage migrated from schema v${from} to v${SCHEMA_VERSION}.`);
 }
 
 /** Convert milliseconds → "Xh Ym" */
@@ -306,17 +404,7 @@ function writeRatingCache(cache) {
 function getSettingsRaw() {
   try {
     const parsed = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
-    if (parsed && typeof parsed === 'object') {
-      const ov = parsed.titleOverrides;
-      if (ov?.value && typeof ov.value === 'object') {
-        const migrated = migrateTitleKeys(ov.value, false);
-        if (migrated !== ov.value) {
-          parsed.titleOverrides = { ...ov, value: migrated };
-          saveSettingsRaw(parsed);
-        }
-      }
-      return parsed;
-    }
+    if (parsed && typeof parsed === 'object') return parsed;
   } catch (e) {
     console.error('Failed to parse settings:', e);
   }
@@ -478,9 +566,7 @@ function getFavoritesRaw() {
   try {
     const parsed = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '{}');
     if (!parsed || typeof parsed !== 'object') return {};
-    const migrated = migrateTitleKeys(parsed);
-    if (migrated !== parsed) saveFavoritesRaw(migrated);
-    return migrated;
+    return parsed;
   } catch (e) {
     console.error('Failed to parse favorites:', e);
     return {};
@@ -1453,7 +1539,7 @@ function ghApi(method, path, token, body) {
 }
 
 function buildSyncPayload(favorites, settings, ratings) {
-  const payload = { version: 1, updatedAt: Date.now(), favorites, settings };
+  const payload = { version: 1, schemaVersion: SCHEMA_VERSION, updatedAt: Date.now(), favorites, settings };
   if (ratings) payload.ratings = ratings;
   return payload;
 }
@@ -1550,17 +1636,23 @@ async function syncNow(manual = false) {
       }
     }
 
+    // A device still running an older script writes old-format keys. Run the
+    // remote payload through the same migration chain before merging, so it
+    // can never reintroduce keys this device has already migrated away from.
+    const remoteVersion = Number.isFinite(+remote.schemaVersion) ? +remote.schemaVersion : 0;
+    if (remoteVersion > SCHEMA_VERSION) {
+      console.warn(`Sync: remote data is schema v${remoteVersion}, newer than this script's v${SCHEMA_VERSION}. Update the script if favorites look wrong.`);
+    }
+    const remoteStores = migrateStores({
+      favorites: remote.favorites || {},
+      settings: { ...(remote.settings || {}) },
+      ratings: remote.ratings || {},
+    }, remoteVersion);
+
     const preSyncFavorites = getFavoritesRaw();
     const beforeFavs = JSON.stringify(preSyncFavorites);
-    const mergedFavorites = pruneTombstones(mergeTimestamped(preSyncFavorites, migrateTitleKeys(remote.favorites || {})));
-    const remoteSettings = { ...(remote.settings || {}) };
-    if (remoteSettings.titleOverrides?.value) {
-      remoteSettings.titleOverrides = {
-        ...remoteSettings.titleOverrides,
-        value: migrateTitleKeys(remoteSettings.titleOverrides.value, false),
-      };
-    }
-    const mergedSettings = mergeTimestamped(getSettingsRaw(), remoteSettings);
+    const mergedFavorites = pruneTombstones(mergeTimestamped(preSyncFavorites, remoteStores.favorites));
+    const mergedSettings = mergeTimestamped(getSettingsRaw(), remoteStores.settings);
 
     saveFavoritesRaw(mergedFavorites);
     saveSettingsRaw(mergedSettings);
@@ -1573,7 +1665,7 @@ async function syncNow(manual = false) {
     if (syncRatings) {
       const localRatings = readRatingCache();
       const beforeCount = Object.keys(localRatings).length;
-      mergedRatings = capRatings(mergeTimestamped(localRatings, remote.ratings));
+      mergedRatings = capRatings(mergeTimestamped(localRatings, remoteStores.ratings));
       ratingsGained = Object.keys(mergedRatings).length - beforeCount;
       writeRatingCache(mergedRatings);
     }
@@ -1597,9 +1689,9 @@ async function syncNow(manual = false) {
       ratings: mergedRatings || undefined,
     });
     const remoteComparable = JSON.stringify({
-      favorites: remote.favorites || {},
-      settings: remote.settings || {},
-      ratings: syncRatings ? remote.ratings || {} : undefined,
+      favorites: remoteStores.favorites,
+      settings: remoteStores.settings,
+      ratings: syncRatings ? remoteStores.ratings : undefined,
     });
     if (localComparable !== remoteComparable) {
       await ghApi('PATCH', `/gists/${gistId}`, token, {
@@ -2492,7 +2584,7 @@ function showSettingsDialog() {
     : '⚪ off';
 
   dialog.innerHTML = `
-    <h4>SubsPlease Fine Enhancer <span class="sp-version">v1.8.0</span></h4>
+    <h4>SubsPlease Fine Enhancer <span class="sp-version">v1.9.0</span></h4>
 
     <label for="sp-image-size">Image preview size</label>
     <select id="sp-image-size">
@@ -2636,6 +2728,8 @@ function showSettingsDialog() {
  * ---------------------------------------------------------------- */
 (function () {
   'use strict';
+
+  runMigrations(); // must happen before anything reads favorites/settings/ratings
 
   const isShowsPage = location.pathname === '/shows/';
   const init = isShowsPage ? initShowsPage : addImages;

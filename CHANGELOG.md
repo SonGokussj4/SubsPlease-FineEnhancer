@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.9.0] - 2026-10-04
+
+### Added
+- **Test suite.** `make test` runs 100 checks across 9 specs, driving the real userscript in Chromium against a fake subsplease.org, AniList and GitHub Gist — no network, no real tokens. `make bootstrap` installs everything, `make doctor` verifies the environment, `make check` runs syntax, metadata and type checks.
+- **Storage schema migrations.** Favorites, title overrides and cached ratings are keyed by the title parser, so changing it used to silently orphan data. Migrations are now numbered and registered in one place, run once at startup, and are also applied to data arriving from sync — a device on an older script can no longer push stale keys back. The gist payload records its schema version.
+
+### Changed
+- The rating cache is capped (3000 entries, newest kept) and entries untouched for ~6 months are dropped — on every write, not just during sync.
+- Expired favorite tombstones are pruned on every save.
+- The in-memory element registry no longer grows without limit on large listings.
+
+### Fixed
+- **A full browser storage quota failed silently**: ratings simply stopped being remembered. The cache now sheds its oldest half and retries, and tells you if it still cannot save.
+- An error message is no longer immediately overwritten by routine progress messages, so a storage failure isn't buried by "Ratings updated".
+- `make` targets all failed with "No such file or directory": the Makefile set `SHELL` to `/usr/bin/env bash`, which GNU Make looks up as a single filename.
+- The README's dev-wrapper snippet was missing `@grant GM_openInTab` and `@connect arm.haglund.dev` and still granted `GM_addStyle` — exactly the drift the README warns about. `make check` now verifies it automatically.
+- Dropped the unused `GM_addStyle` grant from the userscript header.
+
 ## [1.8.0] - 2026-10-04
 
 ### Added
