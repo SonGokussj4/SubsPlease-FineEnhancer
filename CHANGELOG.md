@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.0] - 2026-10-03
+
+### Added
+- **AniList match picker**: N/A ratings now show a 🔍 button that opens a dialog with AniList's top matches (title, year, format, score) — click the right one instead of typing a name blind. The match is pinned by **AniList id**, so it can't drift, and it syncs across devices. Right-clicking a rating still opens the same dialog.
+- **Opt-in ratings-cache sync**: a checkbox in Settings shares the cached ratings through the same private gist, so a second device reuses lookups the first already paid AniList's rate limit for. Off by default; capped at 3000 entries to keep the gist small.
+
+### Changed
+- **Ratings are cached far longer and refreshed in the background.** The TTL is now based on the show's AniList airing status: 7 days for finished shows, 12h for currently airing ones, 24h for "not found" (so a mismatched title retries daily). A cached score now stays on screen — dimmed — while it refreshes, instead of blanking to `…`.
+- `/shows/` now displays any cached score it has, even a stale one, rather than showing `–` until refetched.
+
+### Fixed
+- A stale cached rating on `/shows/` rendered nothing instead of the known score.
+
 ## [1.7.0] - 2026-07-24
 
 ### Fixed

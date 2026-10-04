@@ -9,7 +9,9 @@ A TamperMonkey script that adds image preview functionality to the [SubsPlease](
 - Favorites with visual highlights on the main page, schedule widget, and `/shows/` listing
 - **Cross-device sync** of favorites + settings via a private GitHub Gist (star a show at work, see it at home)
 - Search box and "★ Favorites only" filter on the `/shows/` page
-- Configurable rating color thresholds; right-click a rating to set a custom AniList search title (for mismatched romanizations)
+- Configurable rating color thresholds
+- **AniList match picker** — click the 🔍 on an N/A rating to pick the correct show when SubsPlease's romanization doesn't match AniList (e.g. *Toukutsu Ou* = *Tomb Raider King*); the match is pinned by AniList id and syncs across devices
+- Long-lived rating cache with background refresh (7 days for finished shows, 12h for airing ones), plus optional sync of the cache itself between devices
 - User-configurable image sizes
 - Dark-theme-aware settings dialog with export/import of favorites
 - Gradient overlay for better text visibility of favorite shows

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SubsPlease Fine Enhancer
 // @namespace    https://github.com/SonGokussj4/tampermonkey-subsplease-FineEnhancer
-// @version      1.7.0
+// @version      1.8.0
 // @description  Adds image previews and AniList ratings to SubsPlease release listings. Click ratings to refresh. Settings via menu commands. Manage favorites with visual highlights, filter/search on /shows/, and sync favorites + settings across devices via a private GitHub Gist.
 // @author       SonGokussj4
 // @license      MIT
@@ -25,7 +25,31 @@ const DEBOUNCE_TIMER = 300; // ms
 const CACHE_KEY = 'ratingCache';
 const FAVORITES_KEY = 'spFavorites';
 const SETTINGS_KEY = 'spSettings';
-const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+// Ratings barely move once a show has finished, so settled entries are kept
+// far longer than airing ones. A cached score is always shown immediately and
+// refreshed in the background, so a long TTL never means a stale-looking page.
+const HOUR_MS = 60 * 60 * 1000;
+const CACHE_TTL_AIRING_MS = 12 * HOUR_MS; // score still moving week to week
+const CACHE_TTL_FINISHED_MS = 7 * 24 * HOUR_MS; // settled score
+const CACHE_TTL_UNKNOWN_MS = 2 * 24 * HOUR_MS; // legacy entries without a status
+const CACHE_TTL_MISS_MS = 24 * HOUR_MS; // retry "not found" daily
+const CACHE_TTL_MS = CACHE_TTL_AIRING_MS; // fallback for non-cache code paths
+
+/** How long a cached entry stays fresh, based on the show's airing status. */
+function cacheTtlFor(entry) {
+  if (!entry || typeof entry.score !== 'number') return CACHE_TTL_MISS_MS;
+  switch (entry.status) {
+    case 'RELEASING':
+    case 'NOT_YET_RELEASED':
+    case 'HIATUS':
+      return CACHE_TTL_AIRING_MS;
+    case 'FINISHED':
+    case 'CANCELLED':
+      return CACHE_TTL_FINISHED_MS;
+    default:
+      return CACHE_TTL_UNKNOWN_MS;
+  }
+}
 const SHOWS_ANY_LINK_SELECTOR = 'a[href^="/shows/"][title]';
 const SHOWS_LINK_SELECTOR = 'a[href^="/shows/"][title]:not(.sp-shows-processed)';
 const SHOWS_HEADING_SELECTOR = 'h3';
@@ -36,6 +60,7 @@ const SYNC_FILENAME = 'subsplease-fineenhancer-sync.json';
 const SYNC_TOKEN_KEY = 'spSyncToken';
 const SYNC_GIST_ID_KEY = 'spSyncGistId';
 const TOMBSTONE_TTL_MS = 90 * 24 * 60 * 60 * 1000; // keep deletion markers 90 days
+const RATINGS_SYNC_MAX = 3000; // cap synced rating entries so the gist stays small
 
 // Menu commands for quick settings
 GM_registerMenuCommand('Settings', showSettingsDialog);
@@ -524,13 +549,15 @@ async function fetchAniListSequentially(items) {
 
 function ratingResultFromCacheEntry(entry) {
   const timestamp = entry?.timestamp ?? 0;
-  const stale = Date.now() - timestamp >= CACHE_TTL_MS;
+  const ttl = cacheTtlFor(entry);
+  const stale = Date.now() - timestamp >= ttl;
   return {
     score: entry && Object.prototype.hasOwnProperty.call(entry, 'score') ? entry.score : null,
+    status: entry?.status ?? null,
     cached: true,
     stale,
     timestamp,
-    expires: timestamp + CACHE_TTL_MS,
+    expires: timestamp + ttl,
   };
 }
 
@@ -543,14 +570,25 @@ async function fetchAniListRatingsBatch(items, isRetry = false) {
   if (!items.length) return results;
   if (_anilistSingleMode && items.length > 1) return fetchAniListSequentially(items);
 
-  const params = items.map((_, i) => `$s${i}: String`).join(', ');
-  const fields = items.map((_, i) => `m${i}: Media(search: $s${i}, type: ANIME) { averageScore meanScore }`).join('\n');
-  const query = `query (${params}) {\n${fields}\n}`;
+  // An override may pin an exact AniList id (picked from the match dialog) or
+  // just replace the search text; both forms can share one aliased query.
   const overrides = getSetting('titleOverrides', {}) || {};
+  const params = [];
+  const fields = [];
   const variables = {};
   items.forEach((it, i) => {
-    variables[`s${i}`] = overrides[it.normalizedTitle] || it.normalizedTitle;
+    const override = overrides[it.normalizedTitle];
+    if (override && typeof override === 'object' && override.id) {
+      params.push(`$i${i}: Int`);
+      fields.push(`m${i}: Media(id: $i${i}, type: ANIME) { averageScore meanScore status }`);
+      variables[`i${i}`] = override.id;
+    } else {
+      params.push(`$s${i}: String`);
+      fields.push(`m${i}: Media(search: $s${i}, type: ANIME) { averageScore meanScore status }`);
+      variables[`s${i}`] = (typeof override === 'string' && override) || it.normalizedTitle;
+    }
   });
+  const query = `query (${params.join(', ')}) {\n${fields.join('\n')}\n}`;
 
   try {
     console.log(`AniList: fetching ${items.length} rating(s) in one request`);
@@ -587,13 +625,15 @@ async function fetchAniListRatingsBatch(items, isRetry = false) {
       // A null alias alongside a valid data object is a real "not found".
       const media = json.data[`m${i}`];
       const score = media?.averageScore ?? media?.meanScore ?? null;
-      cache[it.normalizedTitle] = { score, timestamp: now };
+      const entry = { score, status: media?.status ?? null, timestamp: now };
+      cache[it.normalizedTitle] = entry;
       results.set(it.normalizedTitle, {
         score,
+        status: entry.status,
         cached: false,
         stale: false,
         timestamp: now,
-        expires: now + CACHE_TTL_MS,
+        expires: now + cacheTtlFor(entry),
       });
     });
     writeRatingCache(cache);
@@ -654,12 +694,24 @@ function renderRatingSpan(span, data) {
     return;
   }
 
+  // Refreshing with a score already on screen: keep the number, dim it.
+  span.classList.toggle('sp-rating-refreshing', !!data.refreshing);
   span.classList.remove('sp-rating-pending');
   const hasScore = typeof data.score === 'number';
+
+  if (data.refreshing && hasScore) {
+    span.textContent = `${data.score}%`;
+    span.style.color = getRatingColor(data.score);
+    span.title = data.message || 'Refreshing in the background…';
+    return;
+  }
 
   if (!hasScore) {
     span.textContent = 'N/A';
     span.style.color = '#999';
+    // A real "not found" is fixable by picking the right AniList entry;
+    // a connection error is not, so only offer the button for the former.
+    ensureFixButton(span, !data.failed);
 
     if (data.failed) {
       span.title = 'Connection error — click to retry';
@@ -669,10 +721,11 @@ function renderRatingSpan(span, data) {
     } else {
       span.title = 'Not found on AniList — click to retry';
     }
-    span.title += '\nRight-click: set a custom AniList search title';
+    span.title += '\nClick the 🔍 (or right-click) to pick the right AniList entry';
     return;
   }
 
+  ensureFixButton(span, false);
   span.textContent = `${data.score}%`;
   span.style.color = getRatingColor(data.score);
 
@@ -706,22 +759,41 @@ function rerenderAllRatings() {
   }
 }
 
-/** Ask for a custom AniList search title for shows whose SubsPlease
- * romanization AniList doesn't know (e.g. Korean series). Synced. */
-function promptTitleOverride(normalizedTitle) {
-  const overrides = { ...(getSetting('titleOverrides', {}) || {}) };
-  const current = overrides[normalizedTitle] || '';
-  const input = prompt(
-    `Custom AniList search title for:\n"${normalizedTitle}"\n\nUseful when AniList uses a different romanization (e.g. Korean shows).\nLeave empty to remove the override.`,
-    current,
-  );
-  if (input === null) return;
-  const trimmed = input.trim();
-  if (trimmed) {
-    overrides[normalizedTitle] = trimmed;
-  } else {
-    delete overrides[normalizedTitle];
+/** Search AniList and return the top matches for a title. */
+async function fetchAniListCandidates(search) {
+  const query = `query ($s: String) {
+    Page(perPage: 6) {
+      media(search: $s, type: ANIME, sort: SEARCH_MATCH) {
+        id
+        title { romaji english native }
+        format
+        status
+        seasonYear
+        averageScore
+        meanScore
+      }
+    }
+  }`;
+  const { status, json } = await gmFetchAniList(query, { s: search });
+  const hasErrors = Array.isArray(json?.errors) && json.errors.length > 0;
+  if (!json?.data?.Page || hasErrors || status >= 400) {
+    throw new Error(json?.errors?.map((e) => e.message).join('; ') || `HTTP ${status}`);
   }
+  return json.data.Page.media || [];
+}
+
+function describeCandidate(media) {
+  const bits = [media.format, media.seasonYear, media.status && media.status.toLowerCase()].filter(Boolean);
+  const score = media.averageScore ?? media.meanScore;
+  if (typeof score === 'number') bits.push(`${score}%`);
+  return bits.join(' · ');
+}
+
+/** Save (or clear) the override for a title and refetch it immediately. */
+function applyTitleOverride(normalizedTitle, override) {
+  const overrides = { ...(getSetting('titleOverrides', {}) || {}) };
+  if (override) overrides[normalizedTitle] = override;
+  else delete overrides[normalizedTitle];
   setSetting('titleOverrides', overrides);
 
   const cache = readRatingCache();
@@ -730,11 +802,187 @@ function promptTitleOverride(normalizedTitle) {
   ensureRatingForTitle(normalizedTitle, null, true).catch(() => {});
 }
 
+/** Dialog that shows AniList's top matches so a mismatched romanization can be
+ * fixed by clicking the right show instead of typing a name blind. */
+function showTitleMatchPicker(normalizedTitle) {
+  ensureStyles();
+  document.getElementById('sp-match-modal')?.remove();
+
+  const overrides = getSetting('titleOverrides', {}) || {};
+  const current = overrides[normalizedTitle];
+  const currentLabel =
+    current && typeof current === 'object' ? `${current.title} (AniList #${current.id})` : current || '';
+
+  const modal = document.createElement('div');
+  modal.id = 'sp-match-modal';
+  modal.className = 'sp-modal';
+  const dialog = document.createElement('div');
+  dialog.className = 'sp-dialog';
+  modal.appendChild(dialog);
+
+  const heading = document.createElement('h4');
+  heading.textContent = 'Find on AniList';
+  dialog.appendChild(heading);
+
+  const sub = document.createElement('div');
+  sub.className = 'sp-muted';
+  sub.textContent = `SubsPlease title: "${normalizedTitle}"`;
+  dialog.appendChild(sub);
+
+  if (currentLabel) {
+    const cur = document.createElement('div');
+    cur.className = 'sp-muted';
+    cur.textContent = `Currently matched to: ${currentLabel}`;
+    dialog.appendChild(cur);
+  }
+
+  const label = document.createElement('label');
+  label.textContent = 'Search AniList';
+  dialog.appendChild(label);
+
+  const row = document.createElement('div');
+  row.className = 'sp-row';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = typeof current === 'string' ? current : normalizedTitle;
+  input.style.flex = '1';
+  const searchBtn = document.createElement('button');
+  searchBtn.type = 'button';
+  searchBtn.className = 'sp-btn sp-primary';
+  searchBtn.textContent = 'Search';
+  row.appendChild(input);
+  row.appendChild(searchBtn);
+  dialog.appendChild(row);
+
+  const results = document.createElement('div');
+  results.className = 'sp-matches';
+  dialog.appendChild(results);
+
+  const close = () => modal.remove();
+
+  const runSearch = async () => {
+    const term = input.value.trim();
+    if (!term) return;
+    results.textContent = '';
+    const loading = document.createElement('div');
+    loading.className = 'sp-muted';
+    loading.textContent = 'Searching AniList…';
+    results.appendChild(loading);
+
+    let media;
+    try {
+      media = await fetchAniListCandidates(term);
+    } catch (err) {
+      results.textContent = '';
+      const error = document.createElement('div');
+      error.className = 'sp-muted';
+      error.textContent = `Search failed: ${err.message}`;
+      results.appendChild(error);
+      return;
+    }
+
+    results.textContent = '';
+    if (!media.length) {
+      const none = document.createElement('div');
+      none.className = 'sp-muted';
+      none.textContent = 'No matches — try the English or native title.';
+      results.appendChild(none);
+      return;
+    }
+
+    media.forEach((m) => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'sp-match';
+      const title = document.createElement('div');
+      title.className = 'sp-match-title';
+      // AniList data is external — always assign as text, never as HTML
+      title.textContent = m.title?.romaji || m.title?.english || m.title?.native || `AniList #${m.id}`;
+      const meta = document.createElement('div');
+      meta.className = 'sp-match-meta';
+      const alt = m.title?.english && m.title.english !== title.textContent ? `${m.title.english} — ` : '';
+      meta.textContent = alt + describeCandidate(m);
+      item.appendChild(title);
+      item.appendChild(meta);
+      item.addEventListener('click', () => {
+        applyTitleOverride(normalizedTitle, { id: m.id, title: title.textContent });
+        close();
+        showToast(`Matched to "${title.textContent}"`, { state: 'ok' });
+      });
+      results.appendChild(item);
+    });
+  };
+
+  searchBtn.addEventListener('click', runSearch);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      runSearch();
+    }
+  });
+
+  const footer = document.createElement('div');
+  footer.className = 'sp-row sp-footer';
+  if (current) {
+    const clear = document.createElement('button');
+    clear.type = 'button';
+    clear.className = 'sp-btn sp-danger';
+    clear.textContent = 'Clear match';
+    clear.addEventListener('click', () => {
+      applyTitleOverride(normalizedTitle, null);
+      close();
+      showToast('Custom match cleared', { state: 'ok' });
+    });
+    footer.appendChild(clear);
+  }
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'sp-btn';
+  closeBtn.textContent = 'Close';
+  closeBtn.addEventListener('click', close);
+  footer.appendChild(closeBtn);
+  dialog.appendChild(footer);
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) close();
+  });
+  document.body.appendChild(modal);
+  input.focus();
+  input.select();
+  runSearch();
+}
+
+/** Show/hide the little "fix the match" button next to a rating badge. */
+function ensureFixButton(span, show) {
+  const existing =
+    span.nextElementSibling && span.nextElementSibling.classList?.contains('sp-fix-btn')
+      ? span.nextElementSibling
+      : null;
+  if (!show) {
+    existing?.remove();
+    return;
+  }
+  if (existing) return;
+  const normalizedTitle = span.dataset.normalizedTitle;
+  if (!normalizedTitle || !span.parentNode) return;
+  const btn = document.createElement('span');
+  btn.className = 'sp-fix-btn';
+  btn.textContent = '🔍';
+  btn.title = 'Not the right show? Pick the correct AniList entry';
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showTitleMatchPicker(normalizedTitle);
+  });
+  span.parentNode.insertBefore(btn, span.nextSibling);
+}
+
+
 function attachRatingSpanHandlers(span, normalizedTitle) {
   span.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    promptTitleOverride(normalizedTitle);
+    showTitleMatchPicker(normalizedTitle);
   });
 }
 
@@ -762,6 +1010,7 @@ function ensureRatingForTitle(normalizedTitle, originalTitle, force = false) {
   } else {
     renderRatingForTitle(normalizedTitle, { loading: true });
   }
+  if (force || !cachedData || cachedData.stale) renderPendingForTitle(normalizedTitle, 'Refreshing…');
 
   const shouldFetch = force || !cachedData || cachedData.stale;
   if (!shouldFetch) {
@@ -836,6 +1085,18 @@ let _ratingQueueRunning = false;
 let _ratingQueueDone = 0;
 let _ratingQueueFetched = 0;
 
+/** Show that a fetch is pending. A cached score stays on screen (dimmed)
+ * instead of blanking to "…", so a background refresh never looks like a
+ * regression to an empty value. */
+function renderPendingForTitle(normalizedTitle, message) {
+  const cached = getCachedRatingData(normalizedTitle);
+  if (cached && typeof cached.score === 'number') {
+    renderRatingForTitle(normalizedTitle, { ...cached, refreshing: true, message });
+  } else {
+    renderRatingForTitle(normalizedTitle, { loading: true, message });
+  }
+}
+
 function queueRatingFetch(normalizedTitle, originalTitle, force = false) {
   const existing = _ratingQueued.get(normalizedTitle);
   if (existing) {
@@ -845,7 +1106,7 @@ function queueRatingFetch(normalizedTitle, originalTitle, force = false) {
   const entry = [normalizedTitle, originalTitle, !!force];
   _ratingQueued.set(normalizedTitle, entry);
   _ratingQueue.push(entry);
-  renderRatingForTitle(normalizedTitle, { loading: true, message: 'Queued for AniList…' });
+  renderPendingForTitle(normalizedTitle, 'Queued for AniList…');
 }
 
 function _reportQueueProgress() {
@@ -879,7 +1140,7 @@ async function _runRatingQueue() {
         if (cached && !cached.stale && !force && typeof cached.score === 'number') {
           renderRatingForTitle(normalizedTitle, cached);
         } else {
-          renderRatingForTitle(normalizedTitle, { loading: true });
+          renderPendingForTitle(normalizedTitle, 'Fetching from AniList…');
           toFetch.push({ normalizedTitle, sourceTitle: originalTitle || normalizedTitle });
         }
       }
@@ -978,8 +1239,21 @@ function ghApi(method, path, token, body) {
   });
 }
 
-function buildSyncPayload(favorites, settings) {
-  return { version: 1, updatedAt: Date.now(), favorites, settings };
+function buildSyncPayload(favorites, settings, ratings) {
+  const payload = { version: 1, updatedAt: Date.now(), favorites, settings };
+  if (ratings) payload.ratings = ratings;
+  return payload;
+}
+
+/** Keep the synced ratings cache bounded so the gist stays small — newest
+ * entries win, since those are the ones a second device still benefits from. */
+function capRatings(ratings, max = RATINGS_SYNC_MAX) {
+  const keys = Object.keys(ratings);
+  if (keys.length <= max) return ratings;
+  keys.sort((a, b) => (ratings[b]?.timestamp || 0) - (ratings[a]?.timestamp || 0));
+  const capped = {};
+  for (const key of keys.slice(0, max)) capped[key] = ratings[key];
+  return capped;
 }
 
 /** Find the sync gist among the user's gists, or create a private one. */
@@ -1070,6 +1344,20 @@ async function syncNow(manual = false) {
 
     saveFavoritesRaw(mergedFavorites);
     saveSettingsRaw(mergedSettings);
+
+    // Ratings cache (opt-in): merging it means a second device inherits lookups
+    // the first one already paid AniList's rate limit for.
+    const syncRatings = !!getSetting('syncRatings', false);
+    let mergedRatings = null;
+    let ratingsGained = 0;
+    if (syncRatings) {
+      const localRatings = readRatingCache();
+      const beforeCount = Object.keys(localRatings).length;
+      mergedRatings = capRatings(mergeTimestamped(localRatings, remote.ratings));
+      ratingsGained = Object.keys(mergedRatings).length - beforeCount;
+      writeRatingCache(mergedRatings);
+    }
+
     applySettingsSideEffects();
     // Refresh the union of pre- and post-sync keys so stars/highlights for
     // favorites removed during the merge (or pruned away) also get cleared.
@@ -1083,28 +1371,37 @@ async function syncNow(manual = false) {
       console.log('Sync: favorites updated from remote.');
     }
 
-    const localComparable = JSON.stringify({ favorites: mergedFavorites, settings: mergedSettings });
+    const localComparable = JSON.stringify({
+      favorites: mergedFavorites,
+      settings: mergedSettings,
+      ratings: mergedRatings || undefined,
+    });
     const remoteComparable = JSON.stringify({
       favorites: remote.favorites || {},
       settings: remote.settings || {},
+      ratings: syncRatings ? remote.ratings || {} : undefined,
     });
     if (localComparable !== remoteComparable) {
       await ghApi('PATCH', `/gists/${gistId}`, token, {
         files: {
           [SYNC_FILENAME]: {
-            content: JSON.stringify(buildSyncPayload(mergedFavorites, mergedSettings), null, 2),
+            // ratings are the bulk of the payload, so they go unindented
+            content: JSON.stringify(buildSyncPayload(mergedFavorites, mergedSettings, mergedRatings), null, mergedRatings ? 0 : 2),
           },
         },
       });
     }
 
     const favCount = Object.values(mergedFavorites).filter((f) => f && !f.removed).length;
+    if (ratingsGained > 0) {
+      console.log(`Sync: ${ratingsGained} cached ratings pulled in from another device.`);
+      rerenderAllRatings();
+    }
     // Announce a background sync only when it actually brought something new in
-    setSyncStatus(
-      'ok',
-      favoritesChanged ? `Favorites synced from another device (${favCount})` : `Synced ✓ (${favCount} favorites)`,
-      { notify: manual || favoritesChanged },
-    );
+    let okMessage = `Synced ✓ (${favCount} favorites)`;
+    if (favoritesChanged) okMessage = `Favorites synced from another device (${favCount})`;
+    if (ratingsGained > 0) okMessage += ` · +${ratingsGained} ratings`;
+    setSyncStatus('ok', okMessage, { notify: manual || favoritesChanged || ratingsGained > 0 });
   } catch (err) {
     console.error('Sync failed:', err);
     setSyncStatus('error', `Sync failed: ${err.message}`);
@@ -1515,6 +1812,54 @@ function ensureStyles() {
     .sp-rating-pending {
       animation: sp-pulse 1s ease-in-out infinite;
     }
+    .sp-rating-refreshing {
+      opacity: 0.55;
+    }
+    .sp-fix-btn {
+      cursor: pointer;
+      font-size: 11px;
+      line-height: 1;
+      margin-left: 3px;
+      opacity: 0.55;
+      user-select: none;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    .sp-fix-btn:hover {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+    .sp-matches {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 10px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .sp-match {
+      text-align: left;
+      cursor: pointer;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(128, 128, 128, 0.35);
+      background: rgba(128, 128, 128, 0.08);
+      color: inherit;
+      font: inherit;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .sp-match:hover {
+      border-color: rgba(255, 215, 0, 0.7);
+      background: rgba(255, 215, 0, 0.12);
+    }
+    .sp-match-title {
+      font-weight: 600;
+      font-size: 13.5px;
+    }
+    .sp-match-meta {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-top: 2px;
+    }
     @keyframes sp-pulse {
       0%, 100% { opacity: 0.35; }
       50% { opacity: 1; }
@@ -1526,6 +1871,7 @@ function ensureStyles() {
     }
     @media (prefers-reduced-motion: reduce) {
       .sp-spinner, .sp-rating-pending { animation: none; }
+      .sp-toast { transition: none; }
     }
     .sp-version {
       font-size: 11px;
@@ -1569,6 +1915,19 @@ function ensureStyles() {
     }
     .sp-sync-details[open] summary {
       margin-bottom: 8px;
+    }
+    .sp-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin: 10px 0 0;
+      font-weight: normal;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .sp-check input {
+      margin-top: 2px;
+      flex-shrink: 0;
     }
     .sp-muted-inline {
       color: #888;
@@ -1771,11 +2130,13 @@ function initShowsPage() {
 
     registerShowsElements(normalizedTitle, { wrapper, star, ratingSpan, originalTitle: titleText });
 
-    // Render from cache immediately; auto-fetch only for favorites
+    // Always show a score we already have — even a stale one beats a blank "–".
+    // Only favorites are auto-refreshed, so a 1000-row page stays cheap.
     const cachedData = getCachedRatingData(normalizedTitle);
-    if (cachedData && !cachedData.stale) {
+    if (cachedData && typeof cachedData.score === 'number') {
       renderRatingForTitle(normalizedTitle, cachedData);
-    } else if (isFavorite(titleText)) {
+    }
+    if ((!cachedData || cachedData.stale) && isFavorite(titleText)) {
       queueRatingFetch(normalizedTitle, titleText, false);
     }
   });
@@ -1880,7 +2241,7 @@ function showSettingsDialog() {
     : '⚪ off';
 
   dialog.innerHTML = `
-    <h4>SubsPlease Fine Enhancer <span class="sp-version">v1.7.0</span></h4>
+    <h4>SubsPlease Fine Enhancer <span class="sp-version">v1.8.0</span></h4>
 
     <label for="sp-image-size">Image preview size</label>
     <select id="sp-image-size">
@@ -1914,6 +2275,10 @@ function showSettingsDialog() {
         and paste it here on each device.
       </div>
       <input type="password" id="sp-sync-token" placeholder="${hasToken ? '••••••••  (token saved)' : 'ghp_… or github_pat_…'}" autocomplete="off">
+      <label class="sp-check">
+        <input type="checkbox" id="sp-sync-ratings">
+        <span>Also sync the ratings cache<br><span class="sp-muted-inline">Other devices reuse lookups this one already made, instead of re-fetching everything. Makes the gist larger.</span></span>
+      </label>
       <div class="sp-sync-status" id="sp-sync-status"></div>
       <div class="sp-row">
         <button type="button" class="sp-btn sp-primary" id="sp-sync-now">Sync now</button>
@@ -1932,6 +2297,7 @@ function showSettingsDialog() {
 
   const $ = (id) => dialog.querySelector(id);
   $('#sp-image-size').value = normalizeSize(getSetting('imageSize', '64px'));
+  $('#sp-sync-ratings').checked = !!getSetting('syncRatings', false);
 
   const statusEl = $('#sp-sync-status');
   const renderStatus = (status) => {
@@ -1962,6 +2328,7 @@ function showSettingsDialog() {
       const v = parseInt($(id).value, 10);
       return Number.isFinite(v) ? Math.min(100, Math.max(0, v)) : def;
     };
+    setSetting('syncRatings', $('#sp-sync-ratings').checked);
     setSetting('ratingColors', {
       gray: clamp('#sp-th-gray', DEFAULT_RATING_THRESHOLDS.gray),
       red: clamp('#sp-th-red', DEFAULT_RATING_THRESHOLDS.red),
