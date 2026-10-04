@@ -1929,6 +1929,18 @@ function ensureStyles() {
       display: inline-flex;
       align-items: center;
       gap: 4px;
+      white-space: nowrap;
+    }
+    .sp-shows-item > * {
+      flex: none;
+    }
+    /* Shows page: keep the list compact - AniDB badge only on hover */
+    .sp-shows-item .sp-anidb-link {
+      display: none;
+      width: auto;
+    }
+    .sp-shows-item:hover .sp-anidb-link {
+      display: inline-block;
     }
     .sp-shows-star {
       cursor: pointer;
