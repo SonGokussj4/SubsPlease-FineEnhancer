@@ -1,17 +1,27 @@
 # Changelog
 
-## [1.8.0] - 2026-10-03
+## [1.8.0] - 2026-10-04
 
 ### Added
 - **AniList match picker**: N/A ratings now show a 🔍 button that opens a dialog with AniList's top matches (title, year, format, score) — click the right one instead of typing a name blind. The match is pinned by **AniList id**, so it can't drift, and it syncs across devices. Right-clicking a rating still opens the same dialog.
 - **Opt-in ratings-cache sync**: a checkbox in Settings shares the cached ratings through the same private gist, so a second device reuses lookups the first already paid AniList's rate limit for. Off by default; capped at 3000 entries to keep the gist small.
+- **AniDB link**: a small aniDB tag after each rating. Opens the exact AniDB page (AniList → AniDB id via arm.haglund.dev), or an AniDB title search when the id is unknown.
 
 ### Changed
 - **Ratings are cached far longer and refreshed in the background.** The TTL is now based on the show's AniList airing status: 7 days for finished shows, 12h for currently airing ones, 24h for "not found" (so a mismatched title retries daily). A cached score now stays on screen — dimmed — while it refreshes, instead of blanking to `…`.
 - `/shows/` now displays any cached score it has, even a stale one, rather than showing `–` until refetched.
+- The AniDB link now uses the legacy `animedb.pl` search endpoint (`?adb.search=<Title>&show=animelist&do.search=search`, spaces as `+`), which returns the full result list — the newer `/search/anime/` page did not match the same way.
+- The badge now reads **aniDB** in the site's own wordmark colours (dark navy plate, light "ani", orange "DB") instead of a muted "aDB".
 
 ### Fixed
 - A stale cached rating on `/shows/` rendered nothing instead of the known score.
+- **Title parsing for specials and mixed episodes.** These used to be sent to AniList whole (N/A or a wrong match):
+  - decimal / recap episodes `— 12.5`, mixed ranges `— 01 + 02`, `— 12.5-13`
+  - specials `— OVA`, `— OAD`, `— ONA`, `— SP1`, `— Special`, `— Movie`, `— Recap`
+  - trailing notes `(END)`, `(Movie)`, `[Director's Cut]` (a `(2024)` year is kept)
+  - `S2 Part 2` → `2nd Season Part 2`; correct `11th`/`12th`/`13th` suffixes
+- **Line-wrapped titles.** Line breaks inside long release titles were kept in the title, so the same show had different keys on the releases page and `/shows/` (favorites didn't match, AniList got a mangled search). Whitespace is now collapsed.
+- Existing favorites and custom AniList titles (local and synced) are migrated to the corrected keys automatically.
 
 ## [1.7.0] - 2026-07-24
 
