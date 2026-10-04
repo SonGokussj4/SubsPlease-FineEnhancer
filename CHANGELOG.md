@@ -2,6 +2,10 @@
 
 ## [1.8.0] - 2026-10-04
 
+### Changed
+- The AniDB link now uses the legacy `animedb.pl` search endpoint (`?adb.search=<Title>&show=animelist&do.search=search`, spaces as `+`), which returns the full result list — the newer `/search/anime/` page did not match the same way.
+- The badge now reads **aniDB** in the site's own wordmark colours (dark navy plate, light "ani", orange "DB") instead of a muted "aDB".
+
 ### Fixed
 - **Title parsing for specials and mixed episodes.** These used to be sent to AniList whole (N/A or a wrong match):
   - decimal / recap episodes `— 12.5`, mixed ranges `— 01 + 02`, `— 12.5-13`

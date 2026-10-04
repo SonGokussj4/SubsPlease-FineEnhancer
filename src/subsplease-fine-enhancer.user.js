@@ -797,7 +797,11 @@ function anidbSearchUrl(normalizedTitle) {
   // Search the series name without the season suffix: AniDB names seasons
   // differently, so the bare name lists every season to pick from.
   const q = searchTitleFor(normalizedTitle).replace(/\s+\d+(?:st|nd|rd|th) Season(?:\s+Part\s+\d+)?$/i, '');
-  return `https://anidb.net/search/anime/?adb.search=${encodeURIComponent(q)}&do.search=1`;
+  // The legacy animedb.pl endpoint returns the full result list; the newer
+  // /search/anime/ page does not match the same way. URLSearchParams encodes
+  // spaces as "+", which is the form that endpoint expects.
+  const params = new URLSearchParams({ 'adb.search': q, show: 'animelist', 'do.search': 'search' });
+  return `https://anidb.net/perl-bin/animedb.pl?${params}`;
 }
 
 function readAnidbIds() {
@@ -862,7 +866,8 @@ function createAnidbLink(normalizedTitle) {
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
   link.title = 'Search on AniDB';
-  link.textContent = 'aDB';
+  link.appendChild(Object.assign(document.createElement('span'), { className: 'sp-anidb-ani', textContent: 'ani' }));
+  link.appendChild(Object.assign(document.createElement('span'), { className: 'sp-anidb-db', textContent: 'DB' }));
 
   // Resolve the exact page ahead of the click (hover / touch)
   const warm = () => updateAnidbHref(link);
@@ -1491,25 +1496,33 @@ function ensureStyles() {
       opacity: 1;
       line-height: 1;
     }
+    /* Echoes the AniDB wordmark: dark navy plate, light "ani", orange "DB" */
     .sp-anidb-link {
       display: inline-block;
       margin-left: 6px;
-      padding: 0 3px;
+      padding: 1px 5px;
       font-size: 9px;
-      font-weight: 600;
-      line-height: 13px;
+      font-weight: 700;
+      line-height: 12px;
       letter-spacing: 0.2px;
-      color: #8aa !important;
-      border: 1px solid currentColor;
       border-radius: 3px;
-      opacity: 0.4;
+      background: linear-gradient(180deg, #3b4c64 0%, #253349 55%, #1b2537 100%);
+      border: 1px solid rgba(0, 0, 0, 0.55);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
       text-decoration: none !important;
       vertical-align: middle;
-      transition: opacity 0.15s ease;
+      opacity: 0.8;
+      transition: opacity 0.15s ease, box-shadow 0.15s ease;
     }
     .sp-anidb-link:hover {
       opacity: 1;
-      color: #5aa9ff !important;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 0 1px rgba(243, 156, 33, 0.55);
+    }
+    .sp-anidb-ani {
+      color: #e9eef5 !important;
+    }
+    .sp-anidb-db {
+      color: #f39c21 !important;
     }
     .sp-shows-toolbar {
       display: flex;
